@@ -1,19 +1,30 @@
-#include "ParticleFilter.h"
+/*!
+ * @file ParticleFilter.cpp
+ * @copyright Copyright (c) 2019, FADA-CATEC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#include <gsl/gsl_randist.h>
+#include "ParticleFilter.h"
 
 namespace amcl3d
 {
-ParticleFilter::ParticleFilter()
+ParticleFilter::ParticleFilter() : generator_(rd_())
 {
-  //! Setup random number generator from GSL
-  gsl_rng_env_setup();
-  random_value_ = gsl_rng_alloc(gsl_rng_default);
 }
 
 ParticleFilter::~ParticleFilter()
 {
-  gsl_rng_free(random_value_);
 }
 
 void ParticleFilter::buildParticlesPoseMsg(const geometry_msgs::Point32& offset, geometry_msgs::PoseArray& msg) const
@@ -55,10 +66,10 @@ void ParticleFilter::init(const int num_particles, const float x_init, const flo
 
   for (uint32_t i = 1; i < p_.size(); ++i)
   {
-    p_[i].x = p_[0].x + gsl_ran_gaussian(random_value_, x_dev);
-    p_[i].y = p_[0].y + gsl_ran_gaussian(random_value_, y_dev);
-    p_[i].z = p_[0].z + gsl_ran_gaussian(random_value_, z_dev);
-    p_[i].a = p_[0].a + gsl_ran_gaussian(random_value_, a_dev);
+    p_[i].x = p_[0].x + ran_gaussian(0, x_dev);
+    p_[i].y = p_[0].y + ran_gaussian(0, y_dev);
+    p_[i].z = p_[0].z + ran_gaussian(0, z_dev);
+    p_[i].a = p_[0].a + ran_gaussian(0, a_dev);
 
     dist = sqrt((p_[i].x - p_[0].x) * (p_[i].x - p_[0].x) + (p_[i].y - p_[0].y) * (p_[i].y - p_[0].y) +
                 (p_[i].z - p_[0].z) * (p_[i].z - p_[0].z));
@@ -98,12 +109,12 @@ void ParticleFilter::predict(const double odom_x_mod, const double odom_y_mod, c
   {
     sa = sin(p_[i].a);
     ca = cos(p_[i].a);
-    rand_x = delta_x + gsl_ran_gaussian(random_value_, x_dev);
-    rand_y = delta_y + gsl_ran_gaussian(random_value_, y_dev);
+    rand_x = delta_x + ran_gaussian(0, x_dev);
+    rand_y = delta_y + ran_gaussian(0, y_dev);
     p_[i].x += ca * rand_x - sa * rand_y;
     p_[i].y += sa * rand_x + ca * rand_y;
-    p_[i].z += delta_z + gsl_ran_gaussian(random_value_, z_dev);
-    p_[i].a += delta_a + gsl_ran_gaussian(random_value_, a_dev);
+    p_[i].z += delta_z + ran_gaussian(0, z_dev);
+    p_[i].a += delta_a + ran_gaussian(0, a_dev);
   }
 }
 
@@ -193,7 +204,7 @@ void ParticleFilter::resample()
 {
   std::vector<Particle> newP(p_.size());
   const float factor = 1.f / p_.size();
-  const float r = factor * gsl_rng_uniform(random_value_);
+  const float r = factor * rng_uniform(0, 1);
   float c = p_[0].w;
   float u;
 
@@ -235,6 +246,18 @@ float ParticleFilter::computeRangeWeight(const float x, const float y, const flo
   }
 
   return w;
+}
+
+float ParticleFilter::ran_gaussian(const double mean, const double sigma)
+{
+  std::normal_distribution<float> distribution(mean, sigma);
+  return distribution(generator_);
+}
+
+float ParticleFilter::rng_uniform(const float range_from, const float range_to)
+{
+  std::uniform_real_distribution<float> distribution(range_from, range_to);
+  return distribution(generator_);
 }
 
 }  // namespace amcl3d

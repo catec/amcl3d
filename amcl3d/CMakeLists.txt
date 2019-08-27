@@ -16,13 +16,6 @@ find_package(catkin REQUIRED
       rosinrange_msg
 )
 
-###################
-## Configure GSL ##
-###################
-
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GSL REQUIRED gsl)
-
 ###################################
 ## CATKIN specific configuration ##
 ###################################
@@ -34,7 +27,6 @@ catkin_package(
       octomap_ros 
       pcl_ros 
       rosinrange_msg
-   DEPENDS GSL
 )
 
 ###########

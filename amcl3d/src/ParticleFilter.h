@@ -1,14 +1,32 @@
+/*!
+ * @file ParticleFilter.h
+ * @copyright Copyright (c) 2019, FADA-CATEC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #pragma once
 
 #include "Grid3d.h"
 #include "Parameters.h"
+
+#include <random>
 
 #include <ros/ros.h>
 
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <gsl/gsl_rng.h>
 
 namespace amcl3d
 {
@@ -78,6 +96,9 @@ private:
   float computeRangeWeight(const float x, const float y, const float z, const std::vector<Range>& range_data,
                            const double sigma_);
 
+  float ran_gaussian(const double mean, const double sigma);
+  float rng_uniform(const float range_from, const float range_to);
+
   //! Indicates if the filter was initialized
   bool initialized_{ false };
 
@@ -87,7 +108,8 @@ private:
   Particle mean_;  // nuevos
 
   //! Random number generator
-  gsl_rng* random_value_;
+  std::random_device rd_;
+  std::mt19937 generator_;
 };
 
 }  // namespace amcl3d
