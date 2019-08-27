@@ -1,0 +1,15 @@
+<launch>
+
+   <include file="$(find amcl3d)/launch/amcl3d.launch" />
+
+   <!-- Package to test the algorithm -->
+   <node pkg="amcl3d" name="amcl3d_test" type="amcl3d_testnode" output="screen"/>
+
+   <!-- TF which relations the pointcloud-sensor with the uav localization -->
+   <node name="tf_sensorconnected" pkg="tf" type="static_transform_publisher" args="0 0 0.05 3.1416 0 0 /base_link /lidar_points 100"/>
+
+   <!-- To charge the rosbag -->
+   <node pkg="rosbag" name="Rosbag_p" type="play" args="--clock $(find amcl3d)/test/rosbag/RosbagRosin.bag"/>
+
+</launch>
+
