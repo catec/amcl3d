@@ -9,14 +9,14 @@
 
       <!-- Topics and frames -->
 
-      <!-- Topic which has the information about the pointcloud -->
-      <param name="inCloudTopic" value="/lidar_pointcloud"/>
+      <!-- To set the topic which has information about the point cloud from the robot view -->
+      <remap from="laser_sensor" to="/lidar_pointcloud"/>
 
-      <!-- Topic which has the information about the odometry -->
-      <param name="inOdomTopic" value="/vicon_odometry"/>
+      <!-- To set the topic which has information about the robot odometry -->
+      <remap from="odometry" to="/vicon_odometry"/>
 
-      <!-- Topic which has the information about the range sensor -->
-      <param name="inRangeTopic" value="/nanotron_node/range"/>
+      <!-- To set the topic which has information about the sensor-range sensors -->
+      <remap from="radiorange_sensor" to="/nanotron_node/range"/>
 
       <!-- Name of uav frame -->
 

@@ -26,9 +26,6 @@ class Parameters
 public:
   explicit Parameters();
 
-  std::string inCloudTopic;
-  std::string inOdomTopic;
-  std::string inRangeTopic;
   std::string baseFrameId_;
   std::string odomFrameId_;
   std::string globalFrameId_;

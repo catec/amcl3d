@@ -23,20 +23,6 @@ namespace amcl3d
 {
 Parameters::Parameters()
 {
-  if (!ros::param::get("~inCloudTopic", inCloudTopic))
-  {
-    exitWithParameterError("inCloudTopic");
-  }
-
-  if (!ros::param::get("~inOdomTopic", inOdomTopic))
-  {
-    exitWithParameterError("inOdomTopic");
-  }
-
-  if (!ros::param::get("~inRangeTopic", inRangeTopic))
-  {
-    exitWithParameterError("inRangeTopic");
-  }
   if (!ros::param::get("~baseFrameId_", baseFrameId_))
   {
     exitWithParameterError("baseFrameId_");
@@ -199,9 +185,6 @@ Parameters::Parameters()
 
   ROS_INFO("[%s]"
            "\n   Parameters:"
-           "\n      inCloudTopic=%s"
-           "\n      inOdomTopic=%s"
-           "\n      inRangeTopic=%s"
            "\n      baseFrameId_=%s"
            "\n      odomFrameId_=%s"
            "\n      globalFrameId_=%s"
@@ -234,12 +217,11 @@ Parameters::Parameters()
            "\n      aTh_=%lf"
            "\n      takeOffHeight_=%lf"
            "\n      alpha_=%lf",
-           ros::this_node::getName().data(), inCloudTopic.c_str(), inOdomTopic.c_str(), inRangeTopic.c_str(),
-           baseFrameId_.c_str(), odomFrameId_.c_str(), globalFrameId_.c_str(), map_path.c_str(), (int)setInitialPose_,
-           initX_, initY_, initZ_, initA_, initZOffset_, initXDev_, initYDev_, initZDev_, initADev_,
-           publish_point_cloud_rate, grid_slice, publish_grid_slice_rate, publish_grid_tf_rate, sensor_dev,
-           sensor_range, voxelSize_, num_particles, odomXMod_, odomYMod_, odomZMod_, odomAMod_, resampleInterval_,
-           updateRate_, dTh_, aTh_, takeOffHeight_, alpha_);
+           ros::this_node::getName().data(), baseFrameId_.c_str(), odomFrameId_.c_str(), globalFrameId_.c_str(),
+           map_path.c_str(), (int)setInitialPose_, initX_, initY_, initZ_, initA_, initZOffset_, initXDev_, initYDev_,
+           initZDev_, initADev_, publish_point_cloud_rate, grid_slice, publish_grid_slice_rate, publish_grid_tf_rate,
+           sensor_dev, sensor_range, voxelSize_, num_particles, odomXMod_, odomYMod_, odomZMod_, odomAMod_,
+           resampleInterval_, updateRate_, dTh_, aTh_, takeOffHeight_, alpha_);
 }
 
 void Parameters::exitWithParameterError(const char* parameterStr)

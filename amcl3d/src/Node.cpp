@@ -64,9 +64,9 @@ void Node::spin()
         nh_.createTimer(ros::Duration(ros::Rate(parameters_.publish_grid_tf_rate)), &Node::publishGridTf, this);
   }
 
-  point_sub_ = nh_.subscribe(parameters_.inCloudTopic, 1, &Node::pointcloudCallback, this);
-  odom_sub_ = nh_.subscribe(parameters_.inOdomTopic, 1, &Node::odomCallback, this);
-  range_sub_ = nh_.subscribe(parameters_.inRangeTopic, 1, &Node::rangeCallback, this);
+  point_sub_ = nh_.subscribe("/laser_sensor", 1, &Node::pointcloudCallback, this);
+  odom_sub_ = nh_.subscribe("/odometry", 1, &Node::odomCallback, this);
+  range_sub_ = nh_.subscribe("/radiorange_sensor", 1, &Node::rangeCallback, this);
   initialpose_sub_ = nh_.subscribe("initial_pose", 2, &Node::initialPoseReceived, this);
 
   particles_pose_pub_ = nh_.advertise<geometry_msgs::PoseArray>("particle_cloud", 1, true);
