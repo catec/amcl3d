@@ -87,17 +87,17 @@ public:
 
   //! Update Particles with a pointcloud update
   void update(const Grid3d& grid3d, const std::vector<pcl::PointXYZ>& points, const std::vector<Range>& range_data,
-              const double& alpha, const double& sigma_);
+              const double alpha, const double sigma);
 
   //! Resample the set of particles using low-variance sampling
   void resample();
 
 private:
   float computeRangeWeight(const float x, const float y, const float z, const std::vector<Range>& range_data,
-                           const double sigma_);
+                           const double sigma);
 
-  float ran_gaussian(const double mean, const double sigma);
-  float rng_uniform(const float range_from, const float range_to);
+  float ranGaussian(const double mean, const double sigma);
+  float rngUniform(const float range_from, const float range_to);
 
   //! Indicates if the filter was initialized
   bool initialized_{ false };

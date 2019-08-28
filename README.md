@@ -46,7 +46,7 @@ To know in more detail the behavior of the package:
 To build from source, clone the latest version from this repository into your catkin workspace and compile the package using
 
      cd catkin_workspace/src
-     git clone ...
+     git clone https://github.com/fada-catec/amcl3d.git
      cd ../
      catkin build
 

@@ -55,7 +55,7 @@ private:
   double getYawFromTf(const tf::Transform& tf);
 
   //! To show range sensors in Rviz
-  void RvizMarkerPublish(uint32_t anchor_id, const float r, geometry_msgs::Point uav, geometry_msgs::Point anchor);
+  void rvizMarkerPublish(uint32_t anchor_id, const float r, geometry_msgs::Point uav, geometry_msgs::Point anchor);
 
   Parameters parameters_;
   Grid3d grid3d_;

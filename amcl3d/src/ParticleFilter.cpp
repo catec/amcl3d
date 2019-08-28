@@ -52,29 +52,29 @@ void ParticleFilter::init(const int num_particles, const float x_init, const flo
 
   //! Sample the given pose
   const float dev = std::max(std::max(x_dev, y_dev), z_dev);
-  const float gaussConst1 = 1. / (dev * sqrt(2 * M_PI));
-  const float gaussConst2 = 1. / (2 * dev * dev);
+  const float gauss_const_1 = 1. / (dev * sqrt(2 * M_PI));
+  const float gauss_const_2 = 1. / (2 * dev * dev);
 
   p_[0].x = x_init;
   p_[0].y = y_init;
   p_[0].z = z_init;
   p_[0].a = a_init;
-  p_[0].w = gaussConst1;
+  p_[0].w = gauss_const_1;
 
   float wt = p_[0].w;
   float dist;
 
   for (uint32_t i = 1; i < p_.size(); ++i)
   {
-    p_[i].x = p_[0].x + ran_gaussian(0, x_dev);
-    p_[i].y = p_[0].y + ran_gaussian(0, y_dev);
-    p_[i].z = p_[0].z + ran_gaussian(0, z_dev);
-    p_[i].a = p_[0].a + ran_gaussian(0, a_dev);
+    p_[i].x = p_[0].x + ranGaussian(0, x_dev);
+    p_[i].y = p_[0].y + ranGaussian(0, y_dev);
+    p_[i].z = p_[0].z + ranGaussian(0, z_dev);
+    p_[i].a = p_[0].a + ranGaussian(0, a_dev);
 
     dist = sqrt((p_[i].x - p_[0].x) * (p_[i].x - p_[0].x) + (p_[i].y - p_[0].y) * (p_[i].y - p_[0].y) +
                 (p_[i].z - p_[0].z) * (p_[i].z - p_[0].z));
 
-    p_[i].w = gaussConst1 * exp(-dist * dist * gaussConst2);
+    p_[i].w = gauss_const_1 * exp(-dist * dist * gauss_const_2);
 
     wt += p_[i].w;
   }
@@ -109,17 +109,17 @@ void ParticleFilter::predict(const double odom_x_mod, const double odom_y_mod, c
   {
     sa = sin(p_[i].a);
     ca = cos(p_[i].a);
-    rand_x = delta_x + ran_gaussian(0, x_dev);
-    rand_y = delta_y + ran_gaussian(0, y_dev);
+    rand_x = delta_x + ranGaussian(0, x_dev);
+    rand_y = delta_y + ranGaussian(0, y_dev);
     p_[i].x += ca * rand_x - sa * rand_y;
     p_[i].y += sa * rand_x + ca * rand_y;
-    p_[i].z += delta_z + ran_gaussian(0, z_dev);
-    p_[i].a += delta_a + ran_gaussian(0, a_dev);
+    p_[i].z += delta_z + ranGaussian(0, z_dev);
+    p_[i].a += delta_a + ranGaussian(0, a_dev);
   }
 }
 
 void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXYZ>& points,
-                            const std::vector<Range>& range_data, const double& alpha, const double& sigma_)
+                            const std::vector<Range>& range_data, const double alpha, const double sigma)
 {
   //! Incorporate measurements
   float wtp = 0, wtr = 0;
@@ -159,7 +159,7 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
     p_[i].wp = grid3d.computeCloudWeight(new_points);
 
     //! Evaluate the weight of the range sensors
-    p_[i].wr = computeRangeWeight(tx, ty, tz, range_data, sigma_);
+    p_[i].wr = computeRangeWeight(tx, ty, tz, range_data, sigma);
 
     //! Increase the summatory of weights
     wtp += p_[i].wp;
@@ -202,9 +202,9 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
 
 void ParticleFilter::resample()
 {
-  std::vector<Particle> newP(p_.size());
+  std::vector<Particle> new_p(p_.size());
   const float factor = 1.f / p_.size();
-  const float r = factor * rng_uniform(0, 1);
+  const float r = factor * rngUniform(0, 1);
   float c = p_[0].w;
   float u;
 
@@ -218,23 +218,23 @@ void ParticleFilter::resample()
         break;
       c += p_[i].w;
     }
-    newP[m] = p_[i];
-    newP[m].w = factor;
+    new_p[m] = p_[i];
+    new_p[m].w = factor;
   }
 
   //! Asign the new particles set
-  p_ = newP;
+  p_ = new_p;
 }
 
 float ParticleFilter::computeRangeWeight(const float x, const float y, const float z,
-                                         const std::vector<Range>& range_data, const double sigma_)
+                                         const std::vector<Range>& range_data, const double sigma)
 {
   if (range_data.empty())
     return 0;
 
   float w = 1;
-  const float k1 = 1.f / (sigma_ * sqrt(2 * M_PI));
-  const float k2 = 0.5f / (sigma_ * sigma_);
+  const float k1 = 1.f / (sigma * sqrt(2 * M_PI));
+  const float k2 = 0.5f / (sigma * sigma);
   float ax, ay, az, r;
   for (uint32_t i = 0; i < range_data.size(); ++i)
   {
@@ -248,13 +248,13 @@ float ParticleFilter::computeRangeWeight(const float x, const float y, const flo
   return w;
 }
 
-float ParticleFilter::ran_gaussian(const double mean, const double sigma)
+float ParticleFilter::ranGaussian(const double mean, const double sigma)
 {
   std::normal_distribution<float> distribution(mean, sigma);
   return distribution(generator_);
 }
 
-float ParticleFilter::rng_uniform(const float range_from, const float range_to)
+float ParticleFilter::rngUniform(const float range_from, const float range_to)
 {
   std::uniform_real_distribution<float> distribution(range_from, range_to);
   return distribution(generator_);

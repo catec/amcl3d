@@ -51,7 +51,7 @@ void Test::spin()
   }
 
   nh_.shutdown();
-};
+}
 
 void Test::cloudCallback(const sensor_msgs::PointCloud2Ptr& msg)
 {
@@ -60,7 +60,7 @@ void Test::cloudCallback(const sensor_msgs::PointCloud2Ptr& msg)
   msg->header.frame_id = "lidar_points";
 
   pointcloud_pub_.publish(msg);
-};
+}
 
 void Test::baseCallback(const geometry_msgs::PoseStampedConstPtr& msg)
 {
@@ -98,5 +98,5 @@ void Test::baseCallback(const geometry_msgs::PoseStampedConstPtr& msg)
   vicon_pub_.publish(vicon_relative);
 
   br_.sendTransform(tf::StampedTransform(vicon_tf_, ros::Time::now(), "world", "vicon_real"));
-};
+}
 }  // namespace amcl3d

@@ -1,26 +1,26 @@
 <?xml version="1.0"?>
 <package format="2">
 
-   <name>rosinrange_msg</name>
-   <version>1.0.0</version>
-   <description>
-      <p>
-         ROSIN radio-range sensor message.
-      </p>
-      <p>
-         It is the message that amcl3d uses to receive distance measures and positions of radio-range sensors.
-      </p>
-   </description>
-   <url>http://wiki.ros.org/amcl3d</url>
-   <author email="pcarrasco@catec.aero"> Paloma Carrasco Fernandez </author>
-   <maintainer email="fjperez@catec.aero">Francisco J.Perez-Grau </maintainer>
-   <maintainer email="fcuesta@catec.aero">Francisco Cuesta Rodriguez </maintainer>
-   <license>Apache2</license>
+  <name>rosinrange_msg</name>
+  <version>1.0.0</version>
+  <description>
+    <p>
+      ROSIN radio-range sensor message.
+    </p>
+    <p>
+      It is the message that amcl3d uses to receive distance measures and positions of radio-range sensors.
+    </p>
+  </description>
+  <url>http://wiki.ros.org/amcl3d</url>
+  <author email="pcarrasco@catec.aero"> Paloma Carrasco Fernandez </author>
+  <maintainer email="fjperez@catec.aero">Francisco J.Perez-Grau </maintainer>
+  <maintainer email="fcuesta@catec.aero">Francisco Cuesta Rodriguez </maintainer>
+  <license>Apache 2.0</license>
 
-   <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
 
-   <depend>geometry_msgs</depend>
-   <build_depend>message_generation</build_depend>
-   <exec_depend>message_runtime</exec_depend>
+  <depend>geometry_msgs</depend>
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
 
 </package>

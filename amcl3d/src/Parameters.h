@@ -26,39 +26,39 @@ class Parameters
 public:
   explicit Parameters();
 
-  std::string baseFrameId_;
-  std::string odomFrameId_;
-  std::string globalFrameId_;
-  std::string map_path;
+  std::string base_frame_id_;
+  std::string odom_frame_id_;
+  std::string global_frame_id_;
+  std::string map_path_;
 
-  bool setInitialPose_;
-  double initX_, initY_, initZ_, initA_, initZOffset_;
-  double initXDev_, initYDev_, initZDev_, initADev_;
+  bool set_initial_pose_;
+  double init_x_, init_y_, init_z_, init_a_, init_z_offset_;
+  double init_x_dev_, init_y_dev_, init_z_dev_, init_a_dev_;
 
-  float grid_slice;
-  double publish_point_cloud_rate;
-  double publish_grid_slice_rate;
-  double publish_grid_tf_rate;
+  float grid_slice_;
+  double publish_point_cloud_rate_;
+  double publish_grid_slice_rate_;
+  double publish_grid_tf_rate_;
 
-  double sensor_dev;
-  double sensor_range;
-  double voxelSize_;
+  double sensor_dev_;
+  double sensor_range_;
+  double voxel_size_;
 
-  int num_particles;
+  int num_particles_;
 
-  double odomXMod_, odomYMod_, odomZMod_, odomAMod_;
+  double odom_x_mod_, odom_y_mod_, odom_z_mod_, odom_a_mod_;
 
-  int resampleInterval_;
+  int resample_interval_;
 
-  double updateRate_;
-  double dTh_, aTh_;
+  double update_rate_;
+  double d_th_, a_th_;
 
-  double takeOffHeight_;
+  double take_off_height_;
 
   double alpha_;
 
 private:
-  void exitWithParameterError(const char* parameterStr);
+  void exitWithParameterError(const char* parameter_str);
 };
 
 }  // namespace amcl3d

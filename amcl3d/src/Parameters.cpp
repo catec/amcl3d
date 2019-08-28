@@ -23,210 +23,210 @@ namespace amcl3d
 {
 Parameters::Parameters()
 {
-  if (!ros::param::get("~baseFrameId_", baseFrameId_))
+  if (!ros::param::get("~base_frame_id", base_frame_id_))
   {
-    exitWithParameterError("baseFrameId_");
+    exitWithParameterError("base_frame_id");
   }
 
-  if (!ros::param::get("~odomFrameId_", odomFrameId_))
+  if (!ros::param::get("~odom_frame_id", odom_frame_id_))
   {
-    exitWithParameterError("odomFrameId_");
+    exitWithParameterError("odom_frame_id");
   }
 
-  if (!ros::param::get("~globalFrameId_", globalFrameId_))
+  if (!ros::param::get("~global_frame_id", global_frame_id_))
   {
-    exitWithParameterError("globalFrameId_");
+    exitWithParameterError("global_frame_id");
   }
 
-  if (!ros::param::get("~map_path", map_path))
+  if (!ros::param::get("~map_path", map_path_))
   {
     exitWithParameterError("map_path");
   }
 
-  if (!ros::param::get("~setInitialPose_", setInitialPose_))
+  if (!ros::param::get("~set_initial_pose", set_initial_pose_))
   {
-    exitWithParameterError("setInitialPose_");
+    exitWithParameterError("set_initial_pose");
   }
 
-  if (!ros::param::get("~initX_", initX_))
+  if (!ros::param::get("~init_x", init_x_))
   {
-    exitWithParameterError("initX_");
+    exitWithParameterError("init_x");
   }
 
-  if (!ros::param::get("~initY_", initY_))
+  if (!ros::param::get("~init_y", init_y_))
   {
-    exitWithParameterError("initY_");
+    exitWithParameterError("init_y");
   }
 
-  if (!ros::param::get("~initZ_", initZ_))
+  if (!ros::param::get("~init_z", init_z_))
   {
-    exitWithParameterError("initZ_");
+    exitWithParameterError("init_z");
   }
 
-  if (!ros::param::get("~initA_", initA_))
+  if (!ros::param::get("~init_a", init_a_))
   {
-    exitWithParameterError("initA_");
+    exitWithParameterError("init_a");
   }
 
-  if (!ros::param::get("~initZOffset_", initZOffset_))
+  if (!ros::param::get("~init_z_offset", init_z_offset_))
   {
-    exitWithParameterError("initZOffset_");
+    exitWithParameterError("init_z_offset");
   }
 
-  if (!ros::param::get("~initXDev_", initXDev_))
+  if (!ros::param::get("~init_x_dev", init_x_dev_))
   {
-    exitWithParameterError("initXDev_");
+    exitWithParameterError("init_x_dev");
   }
 
-  if (!ros::param::get("~initYDev_", initYDev_))
+  if (!ros::param::get("~init_y_dev", init_y_dev_))
   {
-    exitWithParameterError("initYDev_");
+    exitWithParameterError("init_y_dev");
   }
 
-  if (!ros::param::get("~initZDev_", initZDev_))
+  if (!ros::param::get("~init_z_dev", init_z_dev_))
   {
-    exitWithParameterError("initZDev_");
+    exitWithParameterError("init_z_dev");
   }
 
-  if (!ros::param::get("~initADev_", initADev_))
+  if (!ros::param::get("~init_a_dev", init_a_dev_))
   {
-    exitWithParameterError("initADev_");
+    exitWithParameterError("init_a_dev");
   }
 
-  if (!ros::param::get("~publish_point_cloud_rate", publish_point_cloud_rate))
+  if (!ros::param::get("~publish_point_cloud_rate", publish_point_cloud_rate_))
   {
     exitWithParameterError("publish_point_cloud_rate");
   }
 
-  if (!ros::param::get("~grid_slice", grid_slice))
+  if (!ros::param::get("~grid_slice", grid_slice_))
   {
     exitWithParameterError("grid_slice");
   }
 
-  if (!ros::param::get("~publish_grid_slice_rate", publish_grid_slice_rate))
+  if (!ros::param::get("~publish_grid_slice_rate", publish_grid_slice_rate_))
   {
     exitWithParameterError("publish_grid_slice_rate");
   }
 
-  if (!ros::param::get("~publish_grid_tf_rate", publish_grid_tf_rate))
+  if (!ros::param::get("~publish_grid_tf_rate", publish_grid_tf_rate_))
   {
     exitWithParameterError("publish_grid_tf_rate");
   }
 
-  if (!ros::param::get("~sensor_dev", sensor_dev))
+  if (!ros::param::get("~sensor_dev", sensor_dev_))
   {
     exitWithParameterError("sensor_dev");
   }
 
-  if (!ros::param::get("~sensor_range", sensor_range))
+  if (!ros::param::get("~sensor_range", sensor_range_))
   {
     exitWithParameterError("sensor_range");
   }
 
-  if (!ros::param::get("~voxelSize_", voxelSize_))
+  if (!ros::param::get("~voxel_size", voxel_size_))
   {
-    exitWithParameterError("voxelSize_");
+    exitWithParameterError("voxel_size");
   }
 
-  if (!ros::param::get("~num_particles", num_particles))
+  if (!ros::param::get("~num_particles", num_particles_))
   {
     exitWithParameterError("num_particles");
   }
 
-  if (!ros::param::get("~odomXMod_", odomXMod_))
+  if (!ros::param::get("~odom_x_mod", odom_x_mod_))
   {
-    exitWithParameterError("odomXMod_");
+    exitWithParameterError("odom_x_mod");
   }
 
-  if (!ros::param::get("~odomYMod_", odomYMod_))
+  if (!ros::param::get("~odom_y_mod", odom_y_mod_))
   {
-    exitWithParameterError("odomYMod_");
+    exitWithParameterError("odom_y_mod");
   }
 
-  if (!ros::param::get("~odomZMod_", odomZMod_))
+  if (!ros::param::get("~odom_z_mod", odom_z_mod_))
   {
-    exitWithParameterError("odomZMod_");
+    exitWithParameterError("odom_z_mod");
   }
 
-  if (!ros::param::get("~odomAMod_", odomAMod_))
+  if (!ros::param::get("~odom_a_mod", odom_a_mod_))
   {
-    exitWithParameterError("odomAMod_");
+    exitWithParameterError("odom_a_mod");
   }
 
-  if (!ros::param::get("~resampleInterval_", resampleInterval_))
+  if (!ros::param::get("~resample_interval", resample_interval_))
   {
-    exitWithParameterError("resampleInterval_");
+    exitWithParameterError("resample_interval");
   }
 
-  if (!ros::param::get("~updateRate_", updateRate_))
+  if (!ros::param::get("~update_rate", update_rate_))
   {
-    exitWithParameterError("updateRate_");
+    exitWithParameterError("update_rate");
   }
 
-  if (!ros::param::get("~dTh_", dTh_))
+  if (!ros::param::get("~d_th", d_th_))
   {
-    exitWithParameterError("dTh_");
+    exitWithParameterError("d_th");
   }
 
-  if (!ros::param::get("~aTh_", aTh_))
+  if (!ros::param::get("~a_th", a_th_))
   {
-    exitWithParameterError("aTh_");
+    exitWithParameterError("a_th");
   }
 
-  if (!ros::param::get("~takeOffHeight_", takeOffHeight_))
+  if (!ros::param::get("~take_off_height", take_off_height_))
   {
-    exitWithParameterError("takeOffHeight_");
+    exitWithParameterError("take_off_height");
   }
 
-  if (!ros::param::get("~alpha_", alpha_))
+  if (!ros::param::get("~alpha", alpha_))
   {
-    exitWithParameterError("alpha_");
+    exitWithParameterError("alpha");
   }
 
   ROS_INFO("[%s]"
            "\n   Parameters:"
-           "\n      baseFrameId_=%s"
-           "\n      odomFrameId_=%s"
-           "\n      globalFrameId_=%s"
+           "\n      base_frame_id=%s"
+           "\n      odom_frame_id=%s"
+           "\n      global_frame_id=%s"
            "\n      map_path=%s"
-           "\n      setInitialPose_=%d"
-           "\n      initX_=%lf"
-           "\n      initY_=%lf"
-           "\n      initZ_=%lf"
-           "\n      initA_=%lf"
-           "\n      initZOffset_=%lf"
-           "\n      initXDev_=%lf"
-           "\n      initYDev_=%lf"
-           "\n      initZDev_=%lf"
-           "\n      initADev_=%lf"
+           "\n      set_initial_pose=%d"
+           "\n      init_x=%lf"
+           "\n      init_y=%lf"
+           "\n      init_z=%lf"
+           "\n      init_a=%lf"
+           "\n      init_z_offset=%lf"
+           "\n      init_x_dev=%lf"
+           "\n      init_y_dev=%lf"
+           "\n      init_z_dev=%lf"
+           "\n      init_a_dev=%lf"
            "\n      publish_point_cloud_rate=%lf"
            "\n      grid_slice=%f"
            "\n      publish_grid_slice_rate=%lf"
            "\n      publish_grid_tf_rate=%lf"
            "\n      sensor_dev=%lf"
            "\n      sensor_range=%lf"
-           "\n      voxelSize_=%lf"
+           "\n      voxel_size=%lf"
            "\n      num_particles=%d"
-           "\n      odomXMod_=%lf"
-           "\n      odomYMod_=%lf"
-           "\n      odomZMod_=%lf"
-           "\n      odomAMod_=%lf"
-           "\n      resampleInterval_=%d"
-           "\n      updateRate_=%lf"
-           "\n      dTh_=%lf"
-           "\n      aTh_=%lf"
-           "\n      takeOffHeight_=%lf"
-           "\n      alpha_=%lf",
-           ros::this_node::getName().data(), baseFrameId_.c_str(), odomFrameId_.c_str(), globalFrameId_.c_str(),
-           map_path.c_str(), (int)setInitialPose_, initX_, initY_, initZ_, initA_, initZOffset_, initXDev_, initYDev_,
-           initZDev_, initADev_, publish_point_cloud_rate, grid_slice, publish_grid_slice_rate, publish_grid_tf_rate,
-           sensor_dev, sensor_range, voxelSize_, num_particles, odomXMod_, odomYMod_, odomZMod_, odomAMod_,
-           resampleInterval_, updateRate_, dTh_, aTh_, takeOffHeight_, alpha_);
+           "\n      odom_x_mod=%lf"
+           "\n      odom_y_mod=%lf"
+           "\n      odom_z_mod=%lf"
+           "\n      odom_a_mod=%lf"
+           "\n      resample_interval=%d"
+           "\n      update_rate=%lf"
+           "\n      d_th=%lf"
+           "\n      a_th=%lf"
+           "\n      take_off_height=%lf"
+           "\n      alpha=%lf",
+           ros::this_node::getName().data(), base_frame_id_.c_str(), odom_frame_id_.c_str(), global_frame_id_.c_str(),
+           map_path_.c_str(), (int)set_initial_pose_, init_x_, init_y_, init_z_, init_a_, init_z_offset_, init_x_dev_,
+           init_y_dev_, init_z_dev_, init_a_dev_, publish_point_cloud_rate_, grid_slice_, publish_grid_slice_rate_,
+           publish_grid_tf_rate_, sensor_dev_, sensor_range_, voxel_size_, num_particles_, odom_x_mod_, odom_y_mod_,
+           odom_z_mod_, odom_a_mod_, resample_interval_, update_rate_, d_th_, a_th_, take_off_height_, alpha_);
 }
 
-void Parameters::exitWithParameterError(const char* parameterStr)
+void Parameters::exitWithParameterError(const char* parameter_str)
 {
-  ROS_ERROR("[%s] `%s` parameter not set!", ros::this_node::getName().data(), parameterStr);
+  ROS_ERROR("[%s] `%s` parameter not set!", ros::this_node::getName().data(), parameter_str);
   exit(EXIT_FAILURE);
 }
 
