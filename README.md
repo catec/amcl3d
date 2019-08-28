@@ -1,5 +1,8 @@
 # amcl3d
 
+[![Build Status](https://travis-ci.org/fada-catec/amcl3d.svg?branch=master)](https://travis-ci.org/fada-catec/amcl3d)
+[![License](https://img.shields.io/badge/License-Apache%202-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 ### Overview
 
 This is a package is a **"Adaptive Monte-Carlo Localization in 3D"**.
