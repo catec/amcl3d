@@ -17,7 +17,7 @@
    <author email="fjperez@catec.aero">Francisco J.Perez-Grau </author>
    <maintainer email="fcuesta@catec.aero">Francisco Cuesta Rodriguez </maintainer>
    <maintainer email="pcarrasco@catec.aero"> Paloma Carrasco Fernandez </maintainer>
-   <license>TODO</license>
+   <license>Apache2</license>
 
    <buildtool_depend>catkin</buildtool_depend>
 
