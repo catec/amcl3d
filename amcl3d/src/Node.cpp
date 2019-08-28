@@ -111,6 +111,25 @@ void Node::publishGridTf(const ros::TimerEvent&)
   tf_broadcaster.sendTransform(grid_to_world_tf_);
 }
 
+void Node::publishParticles()
+{
+  //! If the filter is not initialized then exit
+  if (!pf_.isInitialized())
+    return;
+
+  geometry_msgs::Point32 grid3d;
+  grid3d_.getMinOctomap(grid3d.x, grid3d.y, grid3d.z);
+
+  //! Build the msg based on the particles position and orientation
+  geometry_msgs::PoseArray msg;
+  pf_.buildParticlesPoseMsg(grid3d, msg);
+  msg.header.stamp = ros::Time::now();
+  msg.header.frame_id = parameters_.global_frame_id_;
+
+  //! Publish particle cloud
+  particles_pose_pub_.publish(msg);
+}
+
 void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
   if (!is_odom_)
@@ -303,22 +322,22 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
     //! Check jumps
     if (fabs(mean_p_.x - lastmean_p_.x) > 1.)
     {
-      ROS_WARN_STREAM("AMCL Jump detected in X");
+      ROS_WARN("AMCL Jump detected in X");
       amcl_out_ = true;
     }
     if (fabs(mean_p_.y - lastmean_p_.y) > 1.)
     {
-      ROS_WARN_STREAM("AMCL Jump detected in Y");
+      ROS_WARN("AMCL Jump detected in Y");
       amcl_out_ = true;
     }
     if (fabs(mean_p_.z - lastmean_p_.z) > 1.)
     {
-      ROS_WARN_STREAM("AMCL Jump detected in Z");
+      ROS_WARN("AMCL Jump detected in Z");
       amcl_out_ = true;
     }
     if (fabs(mean_p_.a - lastmean_p_.a) > 1.)
     {
-      ROS_WARN_STREAM("AMCL Jump detected in Yaw");
+      ROS_WARN("AMCL Jump detected in Yaw");
       amcl_out_ = true;
     }
 
@@ -419,7 +438,7 @@ void Node::rangeCallback(const rosinrange_msg::range_poseConstPtr& msg)
 
 bool Node::checkUpdateThresholds()
 {
-  std::cout << "Checking for AMCL3D update" << std::endl;
+  ROS_DEBUG("Checking for AMCL3D update");
 
   if (ros::Time::now() < nextupdate_time_)
     return false;
@@ -443,25 +462,6 @@ bool Node::checkUpdateThresholds()
   }
 
   return false;
-}
-
-void Node::publishParticles()
-{
-  //! If the filter is not initialized then exit
-  if (!pf_.isInitialized())
-    return;
-
-  geometry_msgs::Point32 grid3d;
-  grid3d_.getMinOctomap(grid3d.x, grid3d.y, grid3d.z);
-
-  //! Build the msg based on the particles position and orinetation
-  geometry_msgs::PoseArray msg;
-  pf_.buildParticlesPoseMsg(grid3d, msg);
-  msg.header.stamp = ros::Time::now();
-  msg.header.frame_id = parameters_.global_frame_id_;
-
-  //! Publish particle cloud
-  particles_pose_pub_.publish(msg);
 }
 
 void Node::setInitialPose(const tf::Transform& init_pose, const float x_dev, const float y_dev, const float z_dev,
@@ -500,7 +500,7 @@ double Node::getYawFromTf(const tf::Transform& tf)
   return yaw;
 }
 
-void Node::rvizMarkerPublish(uint32_t anchor_id, float r, geometry_msgs::Point uav, geometry_msgs::Point anchor)
+void Node::rvizMarkerPublish(const uint32_t anchor_id, const float r, const geometry_msgs::Point& uav, const geometry_msgs::Point& anchor)
 {
   visualization_msgs::Marker marker;
   marker.header.frame_id = parameters_.global_frame_id_;
