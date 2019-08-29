@@ -32,7 +32,7 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install python-wstool ros-$ROS_DISTRO-ros-base
   - sudo apt-get install -y python-rosinstall python-rosinstall-generator build-essential
-  - sudo apt-get install -y ros-$ROS_DISTRO-octomap*
+  - sudo apt-get install -y ros-$ROS_DISTRO-octomap-msgs
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
   - source ~/.bashrc
