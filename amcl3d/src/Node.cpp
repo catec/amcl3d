@@ -500,7 +500,8 @@ double Node::getYawFromTf(const tf::Transform& tf)
   return yaw;
 }
 
-void Node::rvizMarkerPublish(const uint32_t anchor_id, const float r, const geometry_msgs::Point& uav, const geometry_msgs::Point& anchor)
+void Node::rvizMarkerPublish(const uint32_t anchor_id, const float r, const geometry_msgs::Point& uav,
+                             const geometry_msgs::Point& anchor)
 {
   visualization_msgs::Marker marker;
   marker.header.frame_id = parameters_.global_frame_id_;

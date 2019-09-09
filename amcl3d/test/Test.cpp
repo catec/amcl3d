@@ -72,9 +72,15 @@ void Test::baseCallback(const geometry_msgs::PoseStampedConstPtr& msg)
 
   if (!got_vicon_init_)
   {
-    vicon_init_tf_.setOrigin(tf::Vector3(msg->pose.position.x, msg->pose.position.y, 0));
-    vicon_init_tf_.setRotation(tf::Quaternion(msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z,
-                                              msg->pose.orientation.w));
+    vicon_init_tf_.setOrigin(tf::Vector3(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z));
+
+    tf::Quaternion q(msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z,
+                     +msg->pose.orientation.w);
+
+    double roll, pitch, yaw;
+    tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
+    vicon_init_tf_.setRotation(tf::createQuaternionFromRPY(0, 0, yaw));
+
     got_vicon_init_ = true;
   }
 

@@ -37,13 +37,13 @@
     <param name="set_initial_pose" value="true"/>
 
     <!-- To set the position in X-axis -->
-    <param name="init_x" value="2.87080"/>
+    <param name="init_x" value="2.87080164308"/>
 
     <!-- To set the position in Y-axis -->
-    <param name="init_y" value="1.63822"/>
+    <param name="init_y" value="1.63820032984"/>
 
     <!-- To set the position in Z-axis -->
-    <param name="init_z" value="0"/>
+    <param name="init_z" value="0.21460881682"/>
 
     <!-- To set the YAW angle -->
     <param name="init_a" value="0.144"/>
