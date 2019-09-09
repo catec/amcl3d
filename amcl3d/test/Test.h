@@ -50,5 +50,7 @@ private:
   tf::Transform vicon_relative_tf_;
 
   tf::TransformBroadcaster br_;
+
+  tf::Transform pointcloud_2base_tf_;
 };
 }  // namespace amcl3d

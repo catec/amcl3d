@@ -29,7 +29,7 @@
     <param name="global_frame_id" value="world"/>
 
     <!-- To set the route to the localization of the environment map -->
-    <param name="map_path" value="$(find amcl3d)/test/map/map_file.bt"/>
+    <param name="map_path" value="$(find amcl3d)/test/map/mapfile_complete.bt"/>
 
     <!-- Odometry characterization -->
 
@@ -47,9 +47,6 @@
 
     <!-- To set the YAW angle -->
     <param name="init_a" value="0.144"/>
-
-    <!-- To set a initial offset in Z-axis -->
-    <param name="init_z_offset" value="0"/>
 
     <!-- To set thresholds of X-axis in initial pose -->
     <param name="init_x_dev" value="0.05"/>
@@ -84,12 +81,12 @@
     <param name="sensor_range" value="0.53"/>
 
     <!-- To set the size of the Voxel Filter -->
-    <param name="voxel_size" value="0.7"/>
+    <param name="voxel_size" value="0.1"/>
 
-    <!-- Filter settings-->
+    <!-- Filter settings -->
 
     <!-- To set the number of particles in the filter -->
-    <param name="num_particles" value="500"/>
+    <param name="num_particles" value="600"/>
 
     <!-- To set the thresholds of X-axis where the filter can predict the particles -->
     <param name="odom_x_mod" value="0.1"/>
@@ -119,7 +116,7 @@
     <param name="take_off_height" value="0.5"/>
 
     <!-- To set the percentage weight of point cloud and range sensor, alpha_*pointcloud + (1-alpha_)*range_sensor -->
-    <param name="alpha" value="0.8"/>
+    <param name="alpha" value="1"/>
 
   </node>
 

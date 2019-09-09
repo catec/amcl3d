@@ -17,7 +17,8 @@
 
 #include "../test/Test.h"
 
-#include "tf/transform_listener.h"
+#include <pcl_ros/transforms.h>
+#include <tf/transform_listener.h>
 
 namespace amcl3d
 {
@@ -32,6 +33,10 @@ Test::~Test()
 void Test::spin()
 {
   ROS_DEBUG("[%s] Test::spin()", ros::this_node::getName().data());
+
+  /// Set parameters
+  pointcloud_2base_tf_.setOrigin(tf::Vector3(0, 0, -0.05));
+  pointcloud_2base_tf_.setRotation(tf::createQuaternionFromRPY(0, 0, -M_PI));
 
   //! Initialize transforms and variables
   vicon_tf_.setIdentity();
@@ -55,11 +60,13 @@ void Test::spin()
 
 void Test::cloudCallback(const sensor_msgs::PointCloud2Ptr& msg)
 {
-  //! To correct publishing the pointcloud
-  msg->header.stamp = ros::Time(0);
-  msg->header.frame_id = "lidar_points";
+  sensor_msgs::PointCloud2 base_cloud;
+  pcl_ros::transformPointCloud("base_link", pointcloud_2base_tf_, *msg, base_cloud);
 
-  pointcloud_pub_.publish(msg);
+  //! To correct publishing the pointcloud
+  base_cloud.header.stamp = ros::Time(0);
+
+  pointcloud_pub_.publish(base_cloud);
 }
 
 void Test::baseCallback(const geometry_msgs::PoseStampedConstPtr& msg)
@@ -90,8 +97,7 @@ void Test::baseCallback(const geometry_msgs::PoseStampedConstPtr& msg)
   tf::Quaternion orientation = vicon_relative_tf_.getRotation();
 
   geometry_msgs::TransformStamped vicon_relative;
-  vicon_relative.header.stamp.sec = ros::Time::now().sec;
-  vicon_relative.header.stamp.nsec = ros::Time::now().nsec;
+  vicon_relative.header.stamp = ros::Time::now();
   vicon_relative.header.frame_id = "vicon_odometry";
   vicon_relative.transform.translation.x = position.getX();
   vicon_relative.transform.translation.y = position.getY();
