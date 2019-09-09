@@ -67,7 +67,6 @@ void Node::spin()
   point_sub_ = nh_.subscribe("/laser_sensor", 1, &Node::pointcloudCallback, this);
   odom_sub_ = nh_.subscribe("/odometry", 1, &Node::odomCallback, this);
   range_sub_ = nh_.subscribe("/radiorange_sensor", 1, &Node::rangeCallback, this);
-  initialpose_sub_ = nh_.subscribe("initial_pose", 2, &Node::initialPoseReceived, this);
 
   particles_pose_pub_ = nh_.advertise<geometry_msgs::PoseArray>("particle_cloud", 1, true);
   range_markers_pub_ = nh_.advertise<visualization_msgs::Marker>("range", 0);
@@ -384,29 +383,6 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
 
   tf_br.sendTransform(tf::StampedTransform(lastodom_2_world_tf_, ros::Time::now(), parameters_.global_frame_id_,
                                            parameters_.odom_frame_id_));
-}
-
-void Node::initialPoseReceived(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
-{
-  //! We only accept initial pose estimates in the global frame
-  if (msg->header.frame_id != parameters_.global_frame_id_)
-  {
-    ROS_WARN("Ignoring initial pose in frame \"%s\"; "
-             "initial poses must be in the global frame, \"%s\"",
-             msg->header.frame_id.c_str(), parameters_.global_frame_id_.c_str());
-    return;
-  }
-
-  //! Transform into the global frame
-  tf::Transform pose;
-  tf::poseMsgToTF(msg->pose.pose, pose);
-
-  ROS_INFO("Setting pose (%.6f): %.3f %.3f %.3f %.3f", ros::Time::now().toSec(), pose.getOrigin().x(),
-           pose.getOrigin().y(), pose.getOrigin().z(), getYawFromTf(pose));
-
-  //! Initialize the filter
-  setInitialPose(pose, parameters_.init_x_dev_, parameters_.init_y_dev_, parameters_.init_z_dev_,
-                 parameters_.init_a_dev_);
 }
 
 void Node::rangeCallback(const rosinrange_msg::range_poseConstPtr& msg)
