@@ -17,7 +17,6 @@
 
 #include "Node.h"
 
-#include <pcl/filters/passthrough.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
@@ -78,7 +77,7 @@ void Node::spin()
   while (ros::ok())
   {
     ros::spinOnce();
-    usleep(10000);
+    usleep(100);
   }
 
   nh_.shutdown();
@@ -137,21 +136,6 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
     return;
   }
 
-  //! If the filter is not initialized then exit
-  if (!pf_.isInitialized())
-  {
-    ROS_WARN("Filter not initialized yet, waiting for initial pose.");
-    if (parameters_.set_initial_pose_)
-    {
-      tf::Transform init_pose;
-      init_pose.setOrigin(tf::Vector3(parameters_.init_x_, parameters_.init_y_, parameters_.init_z_));
-      init_pose.setRotation(tf::Quaternion(0.0, 0.0, sin(parameters_.init_a_ * 0.5), cos(parameters_.init_a_ * 0.5)));
-      setInitialPose(init_pose, parameters_.init_x_dev_, parameters_.init_y_dev_, parameters_.init_z_dev_,
-                     parameters_.init_a_dev_);
-    }
-    return;
-  }
-
   //! Check if an update must be performed or not
   if (!checkUpdateThresholds())
     return;
@@ -161,22 +145,9 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 
   //! Apply pass-though and voxel grid
   clock_t begin_filter = clock();
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::fromROSMsg(*msg, *cloud);
-  pcl::PassThrough<pcl::PointXYZ> pass;
-  pass.setInputCloud(cloud);
-  pass.setFilterFieldName("z");
-  pass.setFilterLimits(-10, 0);
-  pass.setNegative(false);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
-  pass.filter(*cloud_filtered);
-  cloud_filtered->header = cloud->header;
-  sensor_msgs::PointCloud2 pass_cloud;
-  pcl::toROSMsg(*cloud_filtered, pass_cloud);
-  cloud_passfilter_pub_.publish(pass_cloud);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_src(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::fromROSMsg(pass_cloud, *cloud_src);
+  pcl::fromROSMsg(*msg, *cloud_src);
   pcl::VoxelGrid<pcl::PointXYZ> sor;
   sor.setInputCloud(cloud_src);
   sor.setLeafSize(parameters_.voxel_size_, parameters_.voxel_size_, parameters_.voxel_size_);
@@ -205,10 +176,10 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   ROS_INFO("Predict time: [%lf] sec", elapsed_secs);
 
   //! Compensate for the current roll and pitch of the base-link
-  const float sr = sin(roll_);
-  const float cr = cos(roll_);
-  const float sp = sin(pitch_);
-  const float cp = cos(pitch_);
+  const float sr = sin(0);
+  const float cr = cos(0);
+  const float sp = sin(0);
+  const float cp = cos(0);
   float r00, r01, r02, r10, r11, r12, r20, r21, r22;
   r00 = cp;
   r01 = sp * sr;
@@ -269,6 +240,21 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
   base_2_odom_tf_.setRotation(tf::Quaternion(msg->transform.rotation.x, msg->transform.rotation.y,
                                              msg->transform.rotation.z, msg->transform.rotation.w));
 
+  //! If the filter is not initialized then exit
+  if (!pf_.isInitialized())
+  {
+    ROS_WARN("Filter not initialized yet, waiting for initial pose.");
+    if (parameters_.set_initial_pose_)
+    {
+      tf::Transform init_pose;
+      init_pose.setOrigin(tf::Vector3(parameters_.init_x_, parameters_.init_y_, parameters_.init_z_));
+      init_pose.setRotation(tf::Quaternion(0.0, 0.0, sin(parameters_.init_a_ * 0.5), cos(parameters_.init_a_ * 0.5)));
+      setInitialPose(init_pose, parameters_.init_x_dev_, parameters_.init_y_dev_, parameters_.init_z_dev_,
+                     parameters_.init_a_dev_);
+    }
+    return;
+  }
+
   //! Update roll and pitch from odometry
   double yaw;
   base_2_odom_tf_.getBasis().getRPY(roll_, pitch_, yaw);
@@ -283,12 +269,6 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
 
     lastbase_2_world_tf_ = initodom_2_world_tf_ * base_2_odom_tf_;
     lastodom_2_world_tf_ = initodom_2_world_tf_;
-  }
-
-  if (!pf_.isInitialized())
-  {
-    ROS_WARN("Filter not initialized yet, not publishing output TF");
-    return;
   }
 
   static bool has_takenoff = false;
