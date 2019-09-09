@@ -32,7 +32,7 @@ public:
   std::string map_path_;
 
   bool set_initial_pose_;
-  double init_x_, init_y_, init_z_, init_a_, init_z_offset_;
+  double init_x_, init_y_, init_z_, init_a_;
   double init_x_dev_, init_y_dev_, init_z_dev_, init_a_dev_;
 
   float grid_slice_;

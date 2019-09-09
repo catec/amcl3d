@@ -476,7 +476,7 @@ void Node::setInitialPose(const tf::Transform& init_pose, const float x_dev, con
 
   const float x_init = t.x() - grid3d.x;
   const float y_init = t.y() - grid3d.y;
-  const float z_init = t.z() - grid3d.z + parameters_.init_z_offset_;
+  const float z_init = t.z() - grid3d.z;
   const float a_init = static_cast<float>(getYawFromTf(init_pose));
 
   pf_.init(parameters_.num_particles_, x_init, y_init, z_init, a_init, x_dev, y_dev, z_dev, a_dev);

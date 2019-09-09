@@ -68,11 +68,6 @@ Parameters::Parameters()
     exitWithParameterError("init_a");
   }
 
-  if (!ros::param::get("~init_z_offset", init_z_offset_))
-  {
-    exitWithParameterError("init_z_offset");
-  }
-
   if (!ros::param::get("~init_x_dev", init_x_dev_))
   {
     exitWithParameterError("init_x_dev");
@@ -194,7 +189,6 @@ Parameters::Parameters()
            "\n      init_y=%lf"
            "\n      init_z=%lf"
            "\n      init_a=%lf"
-           "\n      init_z_offset=%lf"
            "\n      init_x_dev=%lf"
            "\n      init_y_dev=%lf"
            "\n      init_z_dev=%lf"
@@ -218,8 +212,8 @@ Parameters::Parameters()
            "\n      take_off_height=%lf"
            "\n      alpha=%lf",
            ros::this_node::getName().data(), base_frame_id_.c_str(), odom_frame_id_.c_str(), global_frame_id_.c_str(),
-           map_path_.c_str(), (int)set_initial_pose_, init_x_, init_y_, init_z_, init_a_, init_z_offset_, init_x_dev_,
-           init_y_dev_, init_z_dev_, init_a_dev_, publish_point_cloud_rate_, grid_slice_, publish_grid_slice_rate_,
+           map_path_.c_str(), (int)set_initial_pose_, init_x_, init_y_, init_z_, init_a_, init_x_dev_, init_y_dev_,
+           init_z_dev_, init_a_dev_, publish_point_cloud_rate_, grid_slice_, publish_grid_slice_rate_,
            publish_grid_tf_rate_, sensor_dev_, sensor_range_, voxel_size_, num_particles_, odom_x_mod_, odom_y_mod_,
            odom_z_mod_, odom_a_mod_, resample_interval_, update_rate_, d_th_, a_th_, take_off_height_, alpha_);
 }
