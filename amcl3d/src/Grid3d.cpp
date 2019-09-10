@@ -119,20 +119,32 @@ void Grid3d::buildGrid3d2WorldTf(const std::string& global_frame_id, tf::Stamped
   tf = tf::StampedTransform(grid3d_2_world_tf, ros::Time::now(), global_frame_id, "grid3d");
 }
 
-float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points) const
+float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const float tx, const float ty,
+                                 const float tz, const float a) const
 {
-  if (!grid_)
-    return 0;
-
   float weight = 0.;
   int n = 0;
 
+  pcl::PointXYZ new_point;
+
+  const auto sa = sin(a);
+  const auto ca = cos(a);
+
   for (uint32_t i = 0; i < points.size(); ++i)
   {
-    const pcl::PointXYZ& p = points[i];
-    if (p.x >= 0.f && p.y >= 0.f && p.z >= 0.f && p.x < max_x_ && p.y < max_y_ && p.z < max_z_)
+    const auto& p = points[i];
+
+    new_point.x = ca * p.x - sa * p.y + tx;
+    new_point.y = sa * p.x + ca * p.y + ty;
+    new_point.z = p.z + tz;
+
+    if (!grid_)
+      return 0;
+
+    if (new_point.x >= 0.f && new_point.y >= 0.f && new_point.z >= 0.f && new_point.x < max_x_ &&
+        new_point.y < max_y_ && new_point.z < max_z_)
     {
-      weight += grid_[point2grid(p.x, p.y, p.z)].prob;
+      weight += grid_[point2grid(new_point.x, new_point.y, new_point.z)].prob;
       ++n;
     }
   }

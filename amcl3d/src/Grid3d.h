@@ -38,7 +38,8 @@ public:
   bool buildMapPointCloudMsg(sensor_msgs::PointCloud2& msg) const;
   void buildGrid3d2WorldTf(const std::string& global_frame_id, tf::StampedTransform& tf) const;
 
-  float computeCloudWeight(const std::vector<pcl::PointXYZ>& points) const;
+  float computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const float tx, const float ty, const float tz,
+                           const float a) const;
   bool isIntoMap(const float x, const float y, const float z) const;
   void getMinOctomap(float& x, float& y, float& z) const;
 

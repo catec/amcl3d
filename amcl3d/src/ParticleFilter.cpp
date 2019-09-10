@@ -123,17 +123,14 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
 {
   //! Incorporate measurements
   float wtp = 0, wtr = 0;
-  std::vector<pcl::PointXYZ> new_points;
-  new_points.resize(points.size());
 
+  clock_t begin_for1 = clock();
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
     //! Get particle information
     float tx = p_[i].x;
     float ty = p_[i].y;
     float tz = p_[i].z;
-    float sa = sin(p_[i].a);
-    float ca = cos(p_[i].a);
 
     //! Check the particle is into the map
     if (!grid3d.isIntoMap(tx, ty, tz))
@@ -143,20 +140,8 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
       continue;
     }
 
-    //! Transform every point to current particle position
-    for (uint32_t j = 0; j < points.size(); ++j)
-    {
-      //! Get point
-      const pcl::PointXYZ& p = points[j];
-
-      //! Translate and rotate it in yaw
-      new_points[j].x = ca * p.x - sa * p.y + tx;
-      new_points[j].y = sa * p.x + ca * p.y + ty;
-      new_points[j].z = p.z + tz;
-    }
-
     //! Evaluate the weight of the point cloud
-    p_[i].wp = grid3d.computeCloudWeight(new_points);
+    p_[i].wp = grid3d.computeCloudWeight(points, tx, ty, tz, p_[i].a);
 
     //! Evaluate the weight of the range sensors
     p_[i].wr = computeRangeWeight(tx, ty, tz, range_data, sigma);
@@ -165,6 +150,9 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
     wtp += p_[i].wp;
     wtr += p_[i].wr;
   }
+  clock_t end_for1 = clock();
+  double elapsed_secs = double(end_for1 - begin_for1) / CLOCKS_PER_SEC;
+  ROS_INFO("Update time 1: [%lf] sec", elapsed_secs);
 
   //! Normalize all weights
   float wt = 0;

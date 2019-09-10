@@ -130,6 +130,8 @@ void Node::publishParticles()
 
 void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
+  ROS_INFO("pointcloudCallback open");
+
   if (!is_odom_)
   {
     ROS_WARN("Odometry transform not received");
@@ -231,10 +233,14 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 
   //! Publish particles
   publishParticles();
+
+  ROS_INFO("pointcloudCallback close");
 }
 
 void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
 {
+  ROS_INFO("odomCallback open");
+
   base_2_odom_tf_.setOrigin(
       tf::Vector3(msg->transform.translation.x, msg->transform.translation.y, msg->transform.translation.z));
   base_2_odom_tf_.setRotation(tf::Quaternion(msg->transform.rotation.x, msg->transform.rotation.y,
@@ -363,10 +369,14 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
 
   tf_br.sendTransform(tf::StampedTransform(lastodom_2_world_tf_, ros::Time::now(), parameters_.global_frame_id_,
                                            parameters_.odom_frame_id_));
+
+  ROS_INFO("odomCallback close");
 }
 
 void Node::rangeCallback(const rosinrange_msg::range_poseConstPtr& msg)
 {
+  ROS_INFO("rangeCallback open");
+
   const int node = msg->destination_id;
 
   geometry_msgs::Point32 grid3d;
@@ -390,6 +400,8 @@ void Node::rangeCallback(const rosinrange_msg::range_poseConstPtr& msg)
   uav.z = mean_p_.z + grid3d.z;
 
   rvizMarkerPublish(msg->destination_id, static_cast<float>(msg->range), uav, anchor);
+
+  ROS_INFO("rangeCallback close");
 }
 
 bool Node::checkUpdateThresholds()
