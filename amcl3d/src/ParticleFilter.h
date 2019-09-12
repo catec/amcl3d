@@ -28,6 +28,8 @@
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
+#include <boost/thread.hpp>
+
 namespace amcl3d
 {
 //! Struct that contains the data concerning one particle
@@ -104,8 +106,7 @@ private:
 
   //! Particles
   std::vector<Particle> p_;
-
-  Particle mean_;  // nuevos
+  Particle mean_;
 
   //! Random number generator
   std::random_device rd_;

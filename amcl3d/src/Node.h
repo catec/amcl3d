@@ -90,7 +90,7 @@ private:
 
   ros::Time nextupdate_time_;
 
-  ros::Publisher cloud_filter_pub_, cloud_passfilter_pub_;
+  ros::Publisher cloud_filter_pub_;
 };
 
 }  // namespace amcl3d

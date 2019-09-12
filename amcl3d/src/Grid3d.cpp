@@ -130,6 +130,9 @@ float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const
   const auto sa = sin(a);
   const auto ca = cos(a);
 
+  if (!grid_)
+    return 0;
+
   for (uint32_t i = 0; i < points.size(); ++i)
   {
     const auto& p = points[i];
@@ -138,17 +141,13 @@ float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const
     new_point.y = sa * p.x + ca * p.y + ty;
     new_point.z = p.z + tz;
 
-    if (!grid_)
-      return 0;
-
     if (new_point.x >= 0.f && new_point.y >= 0.f && new_point.z >= 0.f && new_point.x < max_x_ &&
         new_point.y < max_y_ && new_point.z < max_z_)
     {
       weight += grid_[point2grid(new_point.x, new_point.y, new_point.z)].prob;
-      ++n;
+      n += 1;
     }
   }
-
   return (n <= 10) ? 0 : weight / n;
 }
 

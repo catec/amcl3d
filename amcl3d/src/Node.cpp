@@ -72,7 +72,6 @@ void Node::spin()
   odom_base_pub_ = nh_.advertise<geometry_msgs::TransformStamped>("base_transform", 1);
 
   cloud_filter_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pointcloud_voxelfiltered", 0);
-  cloud_passfilter_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pointcloud_passfiltered", 0);
 
   while (ros::ok())
   {
@@ -145,7 +144,7 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   static const ros::Duration update_interval(1.0 / parameters_.update_rate_);
   nextupdate_time_ = ros::Time::now() + update_interval;
 
-  //! Apply pass-though and voxel grid
+  //! Apply voxel grid
   clock_t begin_filter = clock();
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_src(new pcl::PointCloud<pcl::PointXYZ>);
