@@ -20,7 +20,7 @@
 #include "Parameters.h"
 #include "ParticleFilter.h"  //! Include Grid.hpp
 
-#include <rosinrange_msg/range_pose.h>
+#include <rosinrange_msg/RangePose.h>
 #include <tf/transform_broadcaster.h>
 
 namespace amcl3d
@@ -42,7 +42,7 @@ private:
   void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg);
   void odomCallback(const geometry_msgs::TransformStampedConstPtr& msg);
   void initialPoseReceived(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg);
-  void rangeCallback(const rosinrange_msg::range_poseConstPtr& msg);
+  void rangeCallback(const rosinrange_msg::RangePoseConstPtr& msg);
 
   //! Check motion and time thresholds for AMCL update
   bool checkUpdateThresholds();

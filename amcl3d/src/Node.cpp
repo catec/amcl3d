@@ -71,7 +71,7 @@ void Node::spin()
   range_markers_pub_ = nh_.advertise<visualization_msgs::Marker>("range", 0);
   odom_base_pub_ = nh_.advertise<geometry_msgs::TransformStamped>("base_transform", 1);
 
-  cloud_filter_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pointcloud_voxelfiltered", 0);
+  cloud_filter_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("pointcloud_filtered", 0);
 
   while (ros::ok())
   {
@@ -176,21 +176,6 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   elapsed_secs = double(end_predict - begin_predict) / CLOCKS_PER_SEC;
   ROS_INFO("Predict time: [%lf] sec", elapsed_secs);
 
-  //! Compensate for the current roll and pitch of the base-link
-  const float sr = sin(0);
-  const float cr = cos(0);
-  const float sp = sin(0);
-  const float cp = cos(0);
-  float r00, r01, r02, r10, r11, r12, r20, r21, r22;
-  r00 = cp;
-  r01 = sp * sr;
-  r02 = cr * sp;
-  r10 = 0;
-  r11 = cr;
-  r12 = -sr;
-  r20 = -sp;
-  r21 = cp * sr;
-  r22 = cp * cr;
   sensor_msgs::PointCloud2ConstIterator<float> iter_x(down_cloud, "x");
   sensor_msgs::PointCloud2ConstIterator<float> iter_y(down_cloud, "y");
   sensor_msgs::PointCloud2ConstIterator<float> iter_z(down_cloud, "z");
@@ -198,9 +183,9 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   points.resize(down_cloud.width);
   for (uint32_t i = 0; i < down_cloud.width; ++i, ++iter_x, ++iter_y, ++iter_z)
   {
-    points[i].x = *iter_x * r00 + *iter_y * r01 + *iter_z * r02;
-    points[i].y = *iter_x * r10 + *iter_y * r11 + *iter_z * r12;
-    points[i].z = *iter_x * r20 + *iter_y * r21 + *iter_z * r22;
+    points[i].x = *iter_x * 1 + *iter_y * 0 + *iter_z * 0;
+    points[i].y = *iter_x * 0 + *iter_y * 1 + *iter_z * 0;
+    points[i].z = *iter_x * 0 + *iter_y * 0 + *iter_z * 1;
   }
 
   //! Perform particle update based on current point-cloud
@@ -372,11 +357,9 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
   ROS_INFO("odomCallback close");
 }
 
-void Node::rangeCallback(const rosinrange_msg::range_poseConstPtr& msg)
+void Node::rangeCallback(const rosinrange_msg::RangePoseConstPtr& msg)
 {
   ROS_INFO("rangeCallback open");
-
-  const int node = msg->destination_id;
 
   geometry_msgs::Point32 grid3d;
   grid3d_.getMinOctomap(grid3d.x, grid3d.y, grid3d.z);
@@ -398,7 +381,7 @@ void Node::rangeCallback(const rosinrange_msg::range_poseConstPtr& msg)
   uav.y = mean_p_.y + grid3d.y;
   uav.z = mean_p_.z + grid3d.z;
 
-  rvizMarkerPublish(msg->destination_id, static_cast<float>(msg->range), uav, anchor);
+  rvizMarkerPublish(msg->source_id, static_cast<float>(msg->range), uav, anchor);
 
   ROS_INFO("rangeCallback close");
 }
@@ -491,17 +474,17 @@ void Node::rvizMarkerPublish(const uint32_t anchor_id, const float r, const geom
   {
     switch (anchor_id)
     {
-      case 0:
+      case 1:
         marker.color.r = 0.0;
         marker.color.g = 1.0;
         marker.color.b = 0.0;
         break;
-      case 1:
+      case 2:
         marker.color.r = 1.0;
         marker.color.g = 0.0;
         marker.color.b = 0.0;
         break;
-      case 2:
+      case 3:
         marker.color.r = 0.0;
         marker.color.g = 0.0;
         marker.color.b = 1.0;

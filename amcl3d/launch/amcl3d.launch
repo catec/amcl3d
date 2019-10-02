@@ -17,7 +17,7 @@
     <remap from="odometry" to="/vicon_odometry"/>
 
     <!-- To set the topic which has information about the sensor-range sensors -->
-    <remap from="radiorange_sensor" to="/nanotron_node/range"/>
+    <remap from="radiorange_sensor" to="/nanotron/range"/>
 
     <!-- To set the name of the robot TF -->
     <param name="base_frame_id" value="base_link"/>

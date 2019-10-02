@@ -28,8 +28,6 @@
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
-#include <boost/thread.hpp>
-
 namespace amcl3d
 {
 //! Struct that contains the data concerning one particle

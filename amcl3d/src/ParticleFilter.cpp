@@ -168,7 +168,13 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
     else
       p_[i].wr = 0;
 
-    p_[i].w = p_[i].wp * alpha + p_[i].wr * (1 - alpha);
+    if (!grid3d.isIntoMap(p_[i].x, p_[i].y, p_[i].z))
+    {
+      // std::cout << "Not into map: " << grid3d_.isIntoMap(tx, ty, tz-1.0) << std::endl;
+      p_[i].w = 0;
+    }
+    else
+      p_[i].w = p_[i].wp * alpha + p_[i].wr * (1 - alpha);
     wt += p_[i].w;
   }
 
