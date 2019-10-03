@@ -20,6 +20,10 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace amcl3d
 {
 Grid3d::Grid3d(const double sensor_dev) : sensor_dev_(sensor_dev)
@@ -122,33 +126,45 @@ void Grid3d::buildGrid3d2WorldTf(const std::string& global_frame_id, tf::Stamped
 float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const float tx, const float ty,
                                  const float tz, const float a) const
 {
-  float weight = 0.;
-  int n = 0;
-
-  pcl::PointXYZ new_point;
+  float total_weight = 0;
+  int total_n = 0;
 
   const auto sa = sin(a);
   const auto ca = cos(a);
+  std::vector<float> weight;
 
-  if (!grid_)
-    return 0;
-
-  for (uint32_t i = 0; i < points.size(); ++i)
+#pragma omp parallel
   {
-    const auto& p = points[i];
-
-    new_point.x = ca * p.x - sa * p.y + tx;
-    new_point.y = sa * p.x + ca * p.y + ty;
-    new_point.z = p.z + tz;
-
-    if (new_point.x >= 0.f && new_point.y >= 0.f && new_point.z >= 0.f && new_point.x < max_x_ &&
-        new_point.y < max_y_ && new_point.z < max_z_)
+    std::vector<float> weight_p;
+#pragma omp for
+    for (uint32_t i = 0; i < points.size(); ++i)
     {
-      weight += grid_[point2grid(new_point.x, new_point.y, new_point.z)].prob;
-      n += 1;
+      pcl::PointXYZ new_point;
+      const auto& p = points[i];
+
+      new_point.x = ca * p.x - sa * p.y + tx;
+      new_point.y = sa * p.x + ca * p.y + ty;
+      new_point.z = p.z + tz;
+
+      if (new_point.x >= 0.f && new_point.y >= 0.f && new_point.z >= 0.f && new_point.x < max_x_ &&
+          new_point.y < max_y_ && new_point.z < max_z_)
+      {
+        weight_p.push_back(grid_[point2grid(new_point.x, new_point.y, new_point.z)].prob);
+      }
+    }
+
+#pragma omp critical
+    {
+      weight = weight_p;
+      for (int i = 0; i < weight_p.size(); ++i)
+      {
+        total_weight += weight[i];
+        total_n += 1;
+      }
     }
   }
-  return (n <= 10) ? 0 : weight / n;
+
+  return (total_n <= 10) ? 0 : total_weight / total_n;
 }
 
 bool Grid3d::isIntoMap(const float x, const float y, const float z) const

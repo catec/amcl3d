@@ -1,5 +1,5 @@
 /*!
- * @file Test.h
+ * @file Demo.h
  * @copyright Copyright (c) 2019, FADA-CATEC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,11 +23,11 @@
 
 namespace amcl3d
 {
-class Test
+class Demo
 {
 public:
-  explicit Test();
-  virtual ~Test();
+  explicit Demo();
+  virtual ~Demo();
 
   void spin();
 

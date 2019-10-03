@@ -1,5 +1,5 @@
 /*!
- * @file Test.cpp
+ * @file Demo.cpp
  * @copyright Copyright (c) 2019, FADA-CATEC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,26 +15,28 @@
  * limitations under the License.
  */
 
-#include "../test/Test.h"
+#include "../demo/Demo.h"
 
 #include <pcl_ros/transforms.h>
 #include <tf/transform_listener.h>
 
 namespace amcl3d
 {
-Test::Test()
+Demo::Demo()
 {
+  ROS_DEBUG("[%s] Demo::Demo()", ros::this_node::getName().data());
 }
 
-Test::~Test()
+Demo::~Demo()
 {
+  ROS_DEBUG("[%s] Demo::~Demo()", ros::this_node::getName().data());
 }
 
-void Test::spin()
+void Demo::spin()
 {
-  ROS_DEBUG("[%s] Test::spin()", ros::this_node::getName().data());
+  ROS_DEBUG("[%s] Demo::spin()", ros::this_node::getName().data());
 
-  /// Set parameters
+  /// \todo Leer de parametros
   pointcloud_2base_tf_.setOrigin(tf::Vector3(0, 0, -0.05));
   pointcloud_2base_tf_.setRotation(tf::createQuaternionFromRPY(0, 0, -M_PI));
 
@@ -44,10 +46,10 @@ void Test::spin()
   vicon_relative_tf_.setIdentity();
 
   //! Initialize subscribers and publishers
-  vicon_sub_ = nh_.subscribe("vicon_client/ROSIN_F550/pose", 1, &Test::baseCallback, this);
+  vicon_sub_ = nh_.subscribe("vicon_client/ROSIN_F550/pose", 1, &Demo::baseCallback, this);
   vicon_pub_ = nh_.advertise<geometry_msgs::TransformStamped>("vicon_odometry", 1);
 
-  pointcloud_sub_ = nh_.subscribe("/os1_cloud_node/points", 1, &Test::cloudCallback, this);
+  pointcloud_sub_ = nh_.subscribe("/os1_cloud_node/points", 1, &Demo::cloudCallback, this);
   pointcloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("lidar_pointcloud", 1);
 
   while (ros::ok())
@@ -58,7 +60,7 @@ void Test::spin()
   nh_.shutdown();
 }
 
-void Test::cloudCallback(const sensor_msgs::PointCloud2Ptr& msg)
+void Demo::cloudCallback(const sensor_msgs::PointCloud2Ptr& msg)
 {
   sensor_msgs::PointCloud2 base_cloud;
   pcl_ros::transformPointCloud("base_link", pointcloud_2base_tf_, *msg, base_cloud);
@@ -69,7 +71,7 @@ void Test::cloudCallback(const sensor_msgs::PointCloud2Ptr& msg)
   pointcloud_pub_.publish(base_cloud);
 }
 
-void Test::baseCallback(const geometry_msgs::PoseStampedConstPtr& msg)
+void Demo::baseCallback(const geometry_msgs::PoseStampedConstPtr& msg)
 {
   //! To send the odometry from /odom
 

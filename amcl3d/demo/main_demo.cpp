@@ -1,5 +1,5 @@
 /*!
- * @file main_test.cpp
+ * @file main_demo.cpp
  * @copyright Copyright (c) 2019, FADA-CATEC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,24 +15,24 @@
  * limitations under the License.
  */
 
-#include "../test/Test.h"
+#include "../demo/Demo.h"
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "test_node");
+  ros::init(argc, argv, "Demo_node");
 
-  ROS_INFO("[%s] Test initialization.", ros::this_node::getName().data());
+  ROS_INFO("[%s] Demo initialization.", ros::this_node::getName().data());
 
   if (!ros::master::check())
   {
-    ROS_ERROR("[%s] roscore is not running.", ros::this_node::getName().data());
+    ROS_ERROR("[%s] Roscore is not running.", ros::this_node::getName().data());
     return EXIT_FAILURE;
   }
 
-  amcl3d::Test node;
+  amcl3d::Demo node;
   node.spin();
 
-  ROS_INFO("[%s] Test finished.", ros::this_node::getName().data());
+  ROS_INFO("[%s] Demo finished.", ros::this_node::getName().data());
 
   return EXIT_SUCCESS;
 }
