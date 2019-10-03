@@ -29,7 +29,7 @@
     <param name="global_frame_id" value="world"/>
 
     <!-- To set the route to the localization of the environment map -->
-    <param name="map_path" value="$(find amcl3d)/test/map/mapfile_complete.bt"/>
+    <param name="map_path" value="$(find amcl3d)/data/map/mapfile_complete.bt"/>
 
     <!-- Odometry characterization -->
 
