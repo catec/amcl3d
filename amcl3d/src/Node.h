@@ -20,7 +20,7 @@
 #include "Parameters.h"
 #include "ParticleFilter.h"  //! Include Grid.hpp
 
-#include <rosinrange_msg/range_pose.h>
+#include <rosinrange_msg/RangePose.h>
 #include <tf/transform_broadcaster.h>
 
 namespace amcl3d
@@ -42,7 +42,7 @@ private:
   void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg);
   void odomCallback(const geometry_msgs::TransformStampedConstPtr& msg);
   void initialPoseReceived(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg);
-  void rangeCallback(const rosinrange_msg::range_poseConstPtr& msg);
+  void rangeCallback(const rosinrange_msg::RangePoseConstPtr& msg);
 
   //! Check motion and time thresholds for AMCL update
   bool checkUpdateThresholds();
@@ -55,7 +55,8 @@ private:
   double getYawFromTf(const tf::Transform& tf);
 
   //! To show range sensors in Rviz
-  void RvizMarkerPublish(uint32_t anchor_id, const float r, geometry_msgs::Point uav, geometry_msgs::Point anchor);
+  void rvizMarkerPublish(const uint32_t anchor_id, const float r, const geometry_msgs::Point& uav,
+                         const geometry_msgs::Point& anchor);
 
   Parameters parameters_;
   Grid3d grid3d_;
@@ -89,7 +90,7 @@ private:
 
   ros::Time nextupdate_time_;
 
-  ros::Publisher cloud_filter_pub_, cloud_passfilter_pub_;
+  ros::Publisher cloud_filter_pub_;
 };
 
 }  // namespace amcl3d

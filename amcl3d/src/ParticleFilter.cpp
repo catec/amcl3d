@@ -1,19 +1,30 @@
-#include "ParticleFilter.h"
+/*!
+ * @file ParticleFilter.cpp
+ * @copyright Copyright (c) 2019, FADA-CATEC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#include <gsl/gsl_randist.h>
+#include "ParticleFilter.h"
 
 namespace amcl3d
 {
-ParticleFilter::ParticleFilter()
+ParticleFilter::ParticleFilter() : generator_(rd_())
 {
-  //! Setup random number generator from GSL
-  gsl_rng_env_setup();
-  random_value_ = gsl_rng_alloc(gsl_rng_default);
 }
 
 ParticleFilter::~ParticleFilter()
 {
-  gsl_rng_free(random_value_);
 }
 
 void ParticleFilter::buildParticlesPoseMsg(const geometry_msgs::Point32& offset, geometry_msgs::PoseArray& msg) const
@@ -41,29 +52,29 @@ void ParticleFilter::init(const int num_particles, const float x_init, const flo
 
   //! Sample the given pose
   const float dev = std::max(std::max(x_dev, y_dev), z_dev);
-  const float gaussConst1 = 1. / (dev * sqrt(2 * M_PI));
-  const float gaussConst2 = 1. / (2 * dev * dev);
+  const float gauss_const_1 = 1. / (dev * sqrt(2 * M_PI));
+  const float gauss_const_2 = 1. / (2 * dev * dev);
 
   p_[0].x = x_init;
   p_[0].y = y_init;
   p_[0].z = z_init;
   p_[0].a = a_init;
-  p_[0].w = gaussConst1;
+  p_[0].w = gauss_const_1;
 
   float wt = p_[0].w;
   float dist;
 
   for (uint32_t i = 1; i < p_.size(); ++i)
   {
-    p_[i].x = p_[0].x + gsl_ran_gaussian(random_value_, x_dev);
-    p_[i].y = p_[0].y + gsl_ran_gaussian(random_value_, y_dev);
-    p_[i].z = p_[0].z + gsl_ran_gaussian(random_value_, z_dev);
-    p_[i].a = p_[0].a + gsl_ran_gaussian(random_value_, a_dev);
+    p_[i].x = p_[0].x + ranGaussian(0, x_dev);
+    p_[i].y = p_[0].y + ranGaussian(0, y_dev);
+    p_[i].z = p_[0].z + ranGaussian(0, z_dev);
+    p_[i].a = p_[0].a + ranGaussian(0, a_dev);
 
     dist = sqrt((p_[i].x - p_[0].x) * (p_[i].x - p_[0].x) + (p_[i].y - p_[0].y) * (p_[i].y - p_[0].y) +
                 (p_[i].z - p_[0].z) * (p_[i].z - p_[0].z));
 
-    p_[i].w = gaussConst1 * exp(-dist * dist * gaussConst2);
+    p_[i].w = gauss_const_1 * exp(-dist * dist * gauss_const_2);
 
     wt += p_[i].w;
   }
@@ -98,31 +109,28 @@ void ParticleFilter::predict(const double odom_x_mod, const double odom_y_mod, c
   {
     sa = sin(p_[i].a);
     ca = cos(p_[i].a);
-    rand_x = delta_x + gsl_ran_gaussian(random_value_, x_dev);
-    rand_y = delta_y + gsl_ran_gaussian(random_value_, y_dev);
+    rand_x = delta_x + ranGaussian(0, x_dev);
+    rand_y = delta_y + ranGaussian(0, y_dev);
     p_[i].x += ca * rand_x - sa * rand_y;
     p_[i].y += sa * rand_x + ca * rand_y;
-    p_[i].z += delta_z + gsl_ran_gaussian(random_value_, z_dev);
-    p_[i].a += delta_a + gsl_ran_gaussian(random_value_, a_dev);
+    p_[i].z += delta_z + ranGaussian(0, z_dev);
+    p_[i].a += delta_a + ranGaussian(0, a_dev);
   }
 }
 
 void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXYZ>& points,
-                            const std::vector<Range>& range_data, const double& alpha, const double& sigma_)
+                            const std::vector<Range>& range_data, const double alpha, const double sigma)
 {
   //! Incorporate measurements
   float wtp = 0, wtr = 0;
-  std::vector<pcl::PointXYZ> new_points;
-  new_points.resize(points.size());
 
+  clock_t begin_for1 = clock();
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
     //! Get particle information
     float tx = p_[i].x;
     float ty = p_[i].y;
     float tz = p_[i].z;
-    float sa = sin(p_[i].a);
-    float ca = cos(p_[i].a);
 
     //! Check the particle is into the map
     if (!grid3d.isIntoMap(tx, ty, tz))
@@ -132,28 +140,19 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
       continue;
     }
 
-    //! Transform every point to current particle position
-    for (uint32_t j = 0; j < points.size(); ++j)
-    {
-      //! Get point
-      const pcl::PointXYZ& p = points[j];
-
-      //! Translate and rotate it in yaw
-      new_points[j].x = ca * p.x - sa * p.y + tx;
-      new_points[j].y = sa * p.x + ca * p.y + ty;
-      new_points[j].z = p.z + tz;
-    }
-
     //! Evaluate the weight of the point cloud
-    p_[i].wp = grid3d.computeCloudWeight(new_points);
+    p_[i].wp = grid3d.computeCloudWeight(points, tx, ty, tz, p_[i].a);
 
     //! Evaluate the weight of the range sensors
-    p_[i].wr = computeRangeWeight(tx, ty, tz, range_data, sigma_);
+    p_[i].wr = computeRangeWeight(tx, ty, tz, range_data, sigma);
 
     //! Increase the summatory of weights
     wtp += p_[i].wp;
     wtr += p_[i].wr;
   }
+  clock_t end_for1 = clock();
+  double elapsed_secs = double(end_for1 - begin_for1) / CLOCKS_PER_SEC;
+  ROS_INFO("Update time 1: [%lf] sec", elapsed_secs);
 
   //! Normalize all weights
   float wt = 0;
@@ -169,7 +168,13 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
     else
       p_[i].wr = 0;
 
-    p_[i].w = p_[i].wp * alpha + p_[i].wr * (1 - alpha);
+    if (!grid3d.isIntoMap(p_[i].x, p_[i].y, p_[i].z))
+    {
+      // std::cout << "Not into map: " << grid3d_.isIntoMap(tx, ty, tz-1.0) << std::endl;
+      p_[i].w = 0;
+    }
+    else
+      p_[i].w = p_[i].wp * alpha + p_[i].wr * (1 - alpha);
     wt += p_[i].w;
   }
 
@@ -191,9 +196,9 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
 
 void ParticleFilter::resample()
 {
-  std::vector<Particle> newP(p_.size());
+  std::vector<Particle> new_p(p_.size());
   const float factor = 1.f / p_.size();
-  const float r = factor * gsl_rng_uniform(random_value_);
+  const float r = factor * rngUniform(0, 1);
   float c = p_[0].w;
   float u;
 
@@ -207,23 +212,23 @@ void ParticleFilter::resample()
         break;
       c += p_[i].w;
     }
-    newP[m] = p_[i];
-    newP[m].w = factor;
+    new_p[m] = p_[i];
+    new_p[m].w = factor;
   }
 
   //! Asign the new particles set
-  p_ = newP;
+  p_ = new_p;
 }
 
 float ParticleFilter::computeRangeWeight(const float x, const float y, const float z,
-                                         const std::vector<Range>& range_data, const double sigma_)
+                                         const std::vector<Range>& range_data, const double sigma)
 {
   if (range_data.empty())
     return 0;
 
   float w = 1;
-  const float k1 = 1.f / (sigma_ * sqrt(2 * M_PI));
-  const float k2 = 0.5f / (sigma_ * sigma_);
+  const float k1 = 1.f / (sigma * sqrt(2 * M_PI));
+  const float k2 = 0.5f / (sigma * sigma);
   float ax, ay, az, r;
   for (uint32_t i = 0; i < range_data.size(); ++i)
   {
@@ -235,6 +240,18 @@ float ParticleFilter::computeRangeWeight(const float x, const float y, const flo
   }
 
   return w;
+}
+
+float ParticleFilter::ranGaussian(const double mean, const double sigma)
+{
+  std::normal_distribution<float> distribution(mean, sigma);
+  return distribution(generator_);
+}
+
+float ParticleFilter::rngUniform(const float range_from, const float range_to)
+{
+  std::uniform_real_distribution<float> distribution(range_from, range_to);
+  return distribution(generator_);
 }
 
 }  // namespace amcl3d
