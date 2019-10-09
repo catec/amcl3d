@@ -30,7 +30,7 @@ before_install:
   - sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
   - sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
   - sudo apt-get update -qq
-  - sudo apt-get install python-wstool ros-$ROS_DISTRO-ros-base
+  - sudo apt-get install python-catkin-pkg python-catkin-tools python-rosdep python-wstool ros-$ROS_DISTRO-catkin
   - sudo apt-get install -y python-rosinstall python-rosinstall-generator build-essential
   - sudo apt-get install -y ros-$ROS_DISTRO-octomap-msgs
   - source /opt/ros/$ROS_DISTRO/setup.bash
@@ -53,6 +53,9 @@ install:
   # Add the package under integration to the workspace using a symlink.
   - cd ~/catkin_ws/src
   - ln -s $CI_SOURCE_PATH .
+  - pip install --upgrade pip --user
+  - pip install codecov --user
+  - pip install pytest-cov pytest --user
 
 # Install all dependencies, using wstool first and rosdep second.
 # wstool looks for a ROSINSTALL_FILE defined in the environment variables.
@@ -65,6 +68,24 @@ before_script:
   # package depdencies: install using rosdep.
   - cd ~/catkin_ws
   - rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
+  # Gmock
+  - sudo apt-get install libgtest-dev
+  - sudo apt-get install google-mock
+  - cd /usr/src/gmock
+  - sudo mkdir build
+  - cd build
+  - sudo cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ..
+  - sudo make -j
+  - sudo cp libgmock* /usr/local/lib/.
+  - sudo cp gtest/libgtest* /usr/local/lib/.
+  #- sudo git clone https://github.com/google/googletest.git
+  #- cd googletest
+  #- sudo cp -a googlemock/include/gmock /usr/include
+  #- sudo cp -a googletest/include/gtest /usr/include 
+  #- sudo mkdir build 
+  #- cd build
+  #- sudo cmake -DBUILD_SHARED_LIBS=ON -DBUILD_GTEST=ON -DBUILD_GMOCK=ON -DINSTALL_GTEST=ON -DINSTALL_GMOCK=ON ..
+  #- sudo make install
 
 # Compile and test (mark the build as failed if any step fails). If the
 # CATKIN_OPTIONS file exists, use it as an argument to catkin_make, for example
@@ -77,7 +98,15 @@ before_script:
 script:
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - cd ~/catkin_ws
-  - catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS )
+  - sudo cp src/amcl3d/FindGMock.cmake /usr/share/cmake-3.5/Modules/
+  - catkin_make
   # Run the tests, ensuring the path is set correctly.
   - source devel/setup.bash
-  - catkin_make run_tests && catkin_test_results
+  - catkin_make tests
+
+  - rm -rf build devel
+  - catkin config --cmake-args -DCMAKE_CXX_FLAGS="-Wall -Wno-unused --coverage -fno-inline -fno-inline-small-functions -fno-default-inline" -DCMAKE_C_FLAGS="-Wall -Wno-unused --coverage -fno-inline -fno-inline-small-functions -fno-default-inline" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXE_LINKER_FLAGS="-lgcov"
+  - catkin build
+  - catkin run_tests -i && catkin_test_results
+  - cd src/amcl3d
+  - codecov --gcov-root ~/catkin_ws/build/
