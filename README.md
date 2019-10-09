@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/fada-catec/amcl3d.svg?branch=master)](https://travis-ci.org/fada-catec/amcl3d)
 [![License](https://img.shields.io/badge/License-Apache%202-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![codecov](https://codecov.io/gh/fada-catec/amcl3d/branch/kinetic-test/graph/badge.svg)](https://codecov.io/gh/fada-catec/amcl3d)
 
 ### Overview
 
