@@ -99,6 +99,11 @@ script:
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - cd ~/catkin_ws
   - sudo cp src/amcl3d/FindGMock.cmake /usr/share/cmake-3.5/Modules/
+  - cd ~/catkin_ws/src/amcl3d/amcl3d/
+  - mkdir -p data/map
+  - cd data/map
+  - wget https://github.com/fada-catec/amcl3d/releases/download/v1.1.0/mapfile_complete.bt
+  - cd ~/catkin_ws
   - catkin_make
   # Run the tests, ensuring the path is set correctly.
   - source devel/setup.bash
