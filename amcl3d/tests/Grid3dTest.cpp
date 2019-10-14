@@ -14,220 +14,277 @@ protected:
   Grid3d _sut;
 };
 
+TEST_F(Grid3dTest, openTest)
+{
+  std::string source = PROJECT_SOURCE_DIR;
+  std::string map_path = source + "/data/map/mapfile_complete.bt";
+  std::string map_path_null = source + "/tests/data/mapfile_null.ot";
+
+  bool open_true = _sut.open(map_path);
+  bool open_false = _sut.open(map_path_null);
+
+  EXPECT_EQ(open_true, true);
+  EXPECT_EQ(open_false, false);
+}
+
+TEST_F(Grid3dTest, buildGridSliceMsgTest)
+{
+  ros::Time::init();
+  std::string source = PROJECT_SOURCE_DIR;
+  std::string map_path = source + "/data/map/mapfile_complete.bt";
+
+  nav_msgs::OccupancyGrid msg;
+  float z_false = -1;
+  float z_true = 0;
+
+  bool open_true = _sut.open(map_path);
+
+  bool result_false = _sut.buildGridSliceMsg(z_false, msg);
+
+  std::ifstream ifs(source + "/tests/data/nav_msg.bin", std::ios::in | std::ios::binary);
+  ifs.seekg(0, std::ios::end);
+  std::streampos end = ifs.tellg();
+  ifs.seekg(0, std::ios::beg);
+  std::streampos begin = ifs.tellg();
+
+  uint32_t file_size = end - begin;
+  boost::shared_array<uint8_t> ibuffer(new uint8_t[file_size]);
+  ifs.read((char*)ibuffer.get(), file_size);
+  ros::serialization::IStream istream(ibuffer.get(), file_size);
+  ros::serialization::deserialize(istream, msg);
+  ifs.close();
+
+  bool result_true = _sut.buildGridSliceMsg(z_true, msg);
+
+  EXPECT_EQ(open_true, true);
+  EXPECT_EQ(result_true, true);
+  EXPECT_EQ(result_false, false);
+}
+
+TEST_F(Grid3dTest, buildMapPointCloudMsgTest)
+{
+  std::string source = PROJECT_SOURCE_DIR;
+  std::string map_path = source + "/data/map/mapfile_complete.bt";
+
+  sensor_msgs::PointCloud2 msg;
+
+  bool open_true = _sut.open(map_path);
+
+  std::ifstream ifs(source + "/tests/data/mappointcloud_msg.bin", std::ios::in | std::ios::binary);
+  ifs.seekg(0, std::ios::end);
+  std::streampos end = ifs.tellg();
+  ifs.seekg(0, std::ios::beg);
+  std::streampos begin = ifs.tellg();
+
+  uint32_t file_size = end - begin;
+  boost::shared_array<uint8_t> ibuffer(new uint8_t[file_size]);
+  ifs.read((char*)ibuffer.get(), file_size);
+  ros::serialization::IStream istream(ibuffer.get(), file_size);
+  ros::serialization::deserialize(istream, msg);
+  ifs.close();
+
+  bool result_true = _sut.buildMapPointCloudMsg(msg);
+
+  EXPECT_EQ(open_true, true);
+  EXPECT_EQ(result_true, true);
+}
+
+TEST_F(Grid3dTest, buildGrid3d2WorldTfTest)
+{
+  std::string source = PROJECT_SOURCE_DIR;
+  std::string map_path = source + "/data/map/mapfile_complete.bt";
+
+  tf::StampedTransform tf;
+  std::string global_frame_id = "tests";
+  std::string child_frame_id = "grid3d";
+  float p_x = -17.35;
+  float p_y = -9.5;
+  float p_z = -1.4;
+  float r_x = 0;
+  float r_y = 0;
+  float r_z = 0;
+  float r_w = 1;
+
+  bool open_true = _sut.open(map_path);
+
+  _sut.buildGrid3d2WorldTf(global_frame_id, tf);
+
+  float tf_p_x = tf.getOrigin().getX();
+  float tf_p_y = tf.getOrigin().getY();
+  float tf_p_z = tf.getOrigin().getZ();
+  float tf_r_x = tf.getRotation().getX();
+  float tf_r_y = tf.getRotation().getY();
+  float tf_r_z = tf.getRotation().getZ();
+  float tf_r_w = tf.getRotation().getW();
+
+  EXPECT_EQ(tf.child_frame_id_, child_frame_id);
+  EXPECT_EQ(tf.frame_id_, global_frame_id);
+  EXPECT_EQ(tf_p_x, p_x);
+  EXPECT_EQ(tf_p_y, p_y);
+  EXPECT_EQ(tf_p_z, p_z);
+  EXPECT_EQ(tf_r_x, r_x);
+  EXPECT_EQ(tf_r_y, r_y);
+  EXPECT_EQ(tf_r_z, r_z);
+  EXPECT_EQ(tf_r_w, r_w);
+}
+
 TEST_F(Grid3dTest, computeCloudWeightTest)
 {
   float tx = 20.017967;
   float ty = 10.140815;
   float tz = 3.372801;
   float a = 0.166781;
-  float wp_real = 4.827183;
+  float wp_real = 4.32189;
 
   std::string source = PROJECT_SOURCE_DIR;
   std::string map_path = source + "/data/map/mapfile_complete.bt";
 
   bool open = _sut.open(map_path);
 
-  std::ifstream points_file(source + "/tests/data/GridPoints.bin", std::ios::in | std::ios::binary);
+  geometry_msgs::PoseArray msg;
 
-  float num_1, num_2, num_3;
-  bool first, second, third;
-  int flag_1, flag_2, flag_3;
+  std::ifstream ifs(source + "/tests/data/points_grid.bin", std::ios::in | std::ios::binary);
+  ifs.seekg(0, std::ios::end);
+  std::streampos end = ifs.tellg();
+  ifs.seekg(0, std::ios::beg);
+  std::streampos begin = ifs.tellg();
 
-  std::vector<pcl::PointXYZ> points_read;
+  uint32_t file_size = end - begin;
+  boost::shared_array<uint8_t> ibuffer(new uint8_t[file_size]);
+  ifs.read((char*)ibuffer.get(), file_size);
+  ros::serialization::IStream istream(ibuffer.get(), file_size);
+  ros::serialization::deserialize(istream, msg);
+  ifs.close();
 
-  if (points_file.is_open())
+  std::vector<pcl::PointXYZ> points_grid;
+  pcl::PointXYZ point_grid;
+  for (int i = 0; i < msg.poses.size(); i++)
   {
-    std::string str;
-    while (std::getline(points_file, str))
-    {
-      if (str.size() > 0)
-      {
-        first = false;
-        second = false;
-        third = false;
-        // std::cout << str << std::endl;
-        for (int i = 0; i < str.size(); i++)
-        {
-          if (str[i] == ',' && first == false && second == false && third == false)
-          {
-            flag_1 = i;
-            num_1 = std::stof(str.substr(1, flag_1 - 1));
-            first = true;
-          }
-          else if (str[i] == ',' && first == true && second == false && third == false)
-          {
-            flag_2 = i;
-            num_2 = std::stof(str.substr(flag_1 + 1, flag_2 - flag_1 - 1));
-            second = true;
-          }
-          else if (str[i] == ')' && first == true && second == true && third == false)
-          {
-            flag_3 = i;
-            num_3 = std::stof(str.substr(flag_2 + 1, flag_3 - flag_2 - 1));
-            third = true;
-          }
-        }
-        points_read.push_back(pcl::PointXYZ(num_1, num_2, num_3));
-      }
-    }
-    points_file.close();
+    point_grid.x = msg.poses[i].position.x;
+    point_grid.y = msg.poses[i].position.y;
+    point_grid.z = msg.poses[i].position.z;
+
+    points_grid.push_back(point_grid);
   }
 
-  ROS_INFO("Open: [%d]", open);
-
-  float result = _sut.computeCloudWeight(points_read, 20.017967, 10.140815, 3.372801, 0.166781);
-  ROS_INFO("Result: [%lf]", result);
+  float result = _sut.computeCloudWeight(points_grid, 20.017967, 10.140815, 3.372801, 0.166781);
 
   EXPECT_NEAR(result, wp_real, 0.0001);
 }
 
-TEST_F(Grid3dTest, computeTestParticles)
+TEST_F(Grid3dTest, computeCloudWeightParticlesTest)
 {
+  std::vector<float> wp_test;
+  float wtp = 3301.69;
+
   std::string source = PROJECT_SOURCE_DIR;
   std::string map_path = source + "/data/map/mapfile_complete.bt";
 
   bool open = _sut.open(map_path);
 
+  geometry_msgs::PoseArray msg_pos;
+  geometry_msgs::PoseArray msg;
   std::vector<float> tx_vector;
   std::vector<float> ty_vector;
   std::vector<float> tz_vector;
   std::vector<float> ta_vector;
   std::vector<float> wp_vector;
 
-  std::ifstream tx_file(source + "/tests/data/tx.bin", std::ios::in | std::ios::binary);
+  // Deserialize the points
+  std::ifstream ifs(source + "/tests/data/points_grid.bin", std::ios::in | std::ios::binary);
+  ifs.seekg(0, std::ios::end);
+  std::streampos end = ifs.tellg();
+  ifs.seekg(0, std::ios::beg);
+  std::streampos begin = ifs.tellg();
 
-  if (tx_file.is_open())
+  uint32_t file_size = end - begin;
+  boost::shared_array<uint8_t> ibuffer(new uint8_t[file_size]);
+  ifs.read((char*)ibuffer.get(), file_size);
+  ros::serialization::IStream istream(ibuffer.get(), file_size);
+  ros::serialization::deserialize(istream, msg);
+  ifs.close();
+
+  std::vector<pcl::PointXYZ> points_grid;
+  pcl::PointXYZ point_grid;
+  for (int i = 0; i < msg.poses.size(); i++)
   {
-    std::string str;
-    while (std::getline(tx_file, str))
-    {
-      if (str.size() > 0)
-      {
-        tx_vector.push_back(std::stof(str.substr(0, str.size())));
-      }
-    }
-    tx_file.close();
+    point_grid.x = msg.poses[i].position.x;
+    point_grid.y = msg.poses[i].position.y;
+    point_grid.z = msg.poses[i].position.z;
+
+    points_grid.push_back(point_grid);
   }
 
-  std::ifstream ty_file(source + "/tests/data/ty.bin", std::ios::in | std::ios::binary);
+  // Deserialize information about particles
+  std::ifstream ifs_pos(source + "/tests/data/particle_info.bin", std::ios::in | std::ios::binary);
+  ifs_pos.seekg(0, std::ios::end);
+  std::streampos end_pos = ifs_pos.tellg();
+  ifs_pos.seekg(0, std::ios::beg);
+  std::streampos begin_pos = ifs_pos.tellg();
 
-  if (ty_file.is_open())
+  uint32_t file_size_pos = end_pos - begin_pos;
+  boost::shared_array<uint8_t> ibuffer_pos(new uint8_t[file_size_pos]);
+  ifs_pos.read((char*)ibuffer_pos.get(), file_size_pos);
+  ros::serialization::IStream istream_pos(ibuffer_pos.get(), file_size_pos);
+  ros::serialization::deserialize(istream_pos, msg_pos);
+  ifs_pos.close();
+
+  for (int i = 0; i < msg_pos.poses.size(); i++)
   {
-    std::string str;
-    while (std::getline(ty_file, str))
-    {
-      if (str.size() > 0)
-      {
-        ty_vector.push_back(std::stof(str.substr(0, str.size())));
-      }
-    }
-    ty_file.close();
+    tx_vector.push_back(msg_pos.poses[i].position.x);
+    ty_vector.push_back(msg_pos.poses[i].position.y);
+    tz_vector.push_back(msg_pos.poses[i].position.z);
+    ta_vector.push_back(msg_pos.poses[i].orientation.x);
+    wp_vector.push_back(msg_pos.poses[i].orientation.y);
   }
-
-  std::ifstream tz_file(source + "/tests/data/tz.bin", std::ios::in | std::ios::binary);
-
-  if (tz_file.is_open())
-  {
-    std::string str;
-    while (std::getline(tz_file, str))
-    {
-      if (str.size() > 0)
-      {
-        tz_vector.push_back(std::stof(str.substr(0, str.size())));
-      }
-    }
-    tz_file.close();
-  }
-
-  std::ifstream ta_file(source + "/tests/data/ta.bin", std::ios::in | std::ios::binary);
-
-  if (ta_file.is_open())
-  {
-    std::string str;
-    while (std::getline(ta_file, str))
-    {
-      if (str.size() > 0)
-      {
-        ta_vector.push_back(std::stof(str.substr(0, str.size())));
-      }
-    }
-    ta_file.close();
-  }
-
-  std::ifstream wp_file(source + "/tests/data/wp.bin", std::ios::in | std::ios::binary);
-
-  if (wp_file.is_open())
-  {
-    std::string str;
-    while (std::getline(wp_file, str))
-    {
-      if (str.size() > 0)
-      {
-        wp_vector.push_back(std::stof(str.substr(0, str.size())));
-      }
-    }
-    wp_file.close();
-  }
-
-  std::ifstream points_file(source + "/tests/data/GridPoints.bin", std::ios::in | std::ios::binary);
-
-  float num_1, num_2, num_3;
-  bool first, second, third;
-  int flag_1, flag_2, flag_3;
-
-  std::vector<pcl::PointXYZ> points_read;
-
-  if (points_file.is_open())
-  {
-    std::string str;
-    while (std::getline(points_file, str))
-    {
-      if (str.size() > 0)
-      {
-        first = false;
-        second = false;
-        third = false;
-        // std::cout << str << std::endl;
-        for (int i = 0; i < str.size(); i++)
-        {
-          if (str[i] == ',' && first == false && second == false && third == false)
-          {
-            flag_1 = i;
-            num_1 = std::stof(str.substr(1, flag_1 - 1));
-            first = true;
-          }
-          else if (str[i] == ',' && first == true && second == false && third == false)
-          {
-            flag_2 = i;
-            num_2 = std::stof(str.substr(flag_1 + 1, flag_2 - flag_1 - 1));
-            second = true;
-          }
-          else if (str[i] == ')' && first == true && second == true && third == false)
-          {
-            flag_3 = i;
-            num_3 = std::stof(str.substr(flag_2 + 1, flag_3 - flag_2 - 1));
-            third = true;
-          }
-        }
-        points_read.push_back(pcl::PointXYZ(num_1, num_2, num_3));
-      }
-    }
-    points_file.close();
-  }
-
-  std::vector<float> wp_test;
-
-  float wtp = 3422.208008;
 
   for (uint32_t i = 0; i < wp_vector.size(); ++i)
   {
-    wp_test.push_back(_sut.computeCloudWeight(points_read, tx_vector[i], ty_vector[i], tz_vector[i], ta_vector[i]));
-  }
-
-  for (int i = 0; i < wp_vector.size(); i++)
-  {
+    wp_test.push_back(_sut.computeCloudWeight(points_grid, tx_vector[i], ty_vector[i], tz_vector[i], ta_vector[i]));
     wp_test[i] /= wtp;
     EXPECT_NEAR(wp_vector[i], wp_test[i], 0.0001);
-    // std::cout << "OK" << std::endl;
   }
+}
+
+TEST_F(Grid3dTest, isIntoMapTest)
+{
+  // In mapfile_complete: x_max_ = 26.1 y_max_ = 19.2 z_max_ = 7.65
+  float x_into = 1;
+  float y_into = 1;
+  float z_into = 1;
+  float x_ninto = -1;
+  float y_ninto = -1;
+  float z_ninto = -1;
+
+  std::string source = PROJECT_SOURCE_DIR;
+  std::string map_path = source + "/data/map/mapfile_complete.bt";
+
+  bool open = _sut.open(map_path);
+
+  bool isInto = _sut.isIntoMap(x_into, y_into, z_into);
+  bool isNotInto = _sut.isIntoMap(x_ninto, y_ninto, z_ninto);
+
+  EXPECT_EQ(open, true);
+  EXPECT_EQ(isInto, true);
+  EXPECT_EQ(isNotInto, false);
+}
+
+TEST_F(Grid3dTest, getMinOctomapTest)
+{
+  float x, y, z;
+  float x_min_oct = -17.35;
+  float y_min_oct = -9.5;
+  float z_min_oct = -1.4;
+
+  std::string source = PROJECT_SOURCE_DIR;
+  std::string map_path = source + "/data/map/mapfile_complete.bt";
+
+  bool open = _sut.open(map_path);
+
+  _sut.getMinOctomap(x, y, z);
+
+  EXPECT_EQ(open, true);
+  EXPECT_EQ(x, x_min_oct);
+  EXPECT_EQ(y, y_min_oct);
+  EXPECT_EQ(z, z_min_oct);
 }

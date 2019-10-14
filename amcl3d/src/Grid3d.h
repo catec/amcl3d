@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <geometry_msgs/PoseArray.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <octomap/OcTree.h>
 #include <pcl/point_cloud.h>
