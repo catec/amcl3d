@@ -183,8 +183,15 @@ bool Grid3d::loadOctomap(const std::string& map_path)
     return false;
   }
 
-  if (!octomap_->readBinary(map_path) || octomap_->size() <= 1)
-    return false;
+  if (map_path.compare(map_path.length() - 3, 3, ".bt") == 0)
+    if (!octomap_->readBinary(map_path) || octomap_->size() <= 1)
+      return false;
+  if (map_path.compare(map_path.length() - 3, 3, ".ot") == 0)
+  {
+    octomap::AbstractOcTree* readTreeAbstract = octomap::AbstractOcTree::read(map_path);
+    if (!readTreeAbstract)
+      return false;
+  }
 
   ROS_INFO("[%s] Octomap loaded", ros::this_node::getName().data());
 

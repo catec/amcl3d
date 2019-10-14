@@ -103,6 +103,7 @@ script:
   - mkdir -p data/map
   - cd data/map
   - wget https://github.com/fada-catec/amcl3d/releases/download/v1.1.0/mapfile_complete.bt
+  - wget https://github.com/fada-catec/amcl3d/releases/download/v1.1.0/mapfile_complete_ot.ot
   - cd ~/catkin_ws
   - catkin_make
   # Run the tests, ensuring the path is set correctly.

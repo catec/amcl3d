@@ -17,13 +17,30 @@ protected:
 TEST_F(Grid3dTest, openTest)
 {
   std::string source = PROJECT_SOURCE_DIR;
-  std::string map_path = source + "/data/map/mapfile_complete.bt";
-  std::string map_path_null = source + "/tests/data/mapfile_null.ot";
 
-  bool open_true = _sut.open(map_path);
-  bool open_false = _sut.open(map_path_null);
+  // Open .bt
+  std::string map_path_bt = source + "/data/map/mapfile_complete.bt";
+  bool open_true_bt = _sut.open(map_path_bt);
+  EXPECT_EQ(open_true_bt, true);
 
-  EXPECT_EQ(open_true, true);
+  // Open .ot
+  std::string map_path_ot = source + "/data/map/mapfile_complete_ot.ot";
+  bool open_true_ot = _sut.open(map_path_ot);
+  EXPECT_EQ(open_true_ot, true);
+
+  // Open null .bt
+  std::string map_path_nullbt = source + "/tests/data/mapfile_null.bt";
+  bool open_false_nullbt = _sut.open(map_path_nullbt);
+  EXPECT_EQ(open_false_nullbt, false);
+
+  // Open null .ot
+  std::string map_path_nullot = source + "/tests/data/mapfile_null.ot";
+  bool open_false_nullot = _sut.open(map_path_nullot);
+  EXPECT_EQ(open_false_nullot, false);
+
+  // Open map_path.length() <= 3
+  std::string map_path_false = ".bt";
+  bool open_false = _sut.open(map_path_false);
   EXPECT_EQ(open_false, false);
 }
 
@@ -34,13 +51,10 @@ TEST_F(Grid3dTest, buildGridSliceMsgTest)
   std::string map_path = source + "/data/map/mapfile_complete.bt";
 
   nav_msgs::OccupancyGrid msg;
-  float z_false = -1;
-  float z_true = 0;
+  float z_negative = -1;
+  float z_positive = 0;
 
-  bool open_true = _sut.open(map_path);
-
-  bool result_false = _sut.buildGridSliceMsg(z_false, msg);
-
+  // Deserialize msg
   std::ifstream ifs(source + "/tests/data/nav_msg.bin", std::ios::in | std::ios::binary);
   ifs.seekg(0, std::ios::end);
   std::streampos end = ifs.tellg();
@@ -54,11 +68,21 @@ TEST_F(Grid3dTest, buildGridSliceMsgTest)
   ros::serialization::deserialize(istream, msg);
   ifs.close();
 
-  bool result_true = _sut.buildGridSliceMsg(z_true, msg);
+  // Without Open
+  bool result_open = _sut.buildGridSliceMsg(z_negative, msg);
+  EXPECT_EQ(result_open, false);
 
+  // Open
+  bool open_true = _sut.open(map_path);
   EXPECT_EQ(open_true, true);
-  EXPECT_EQ(result_true, true);
-  EXPECT_EQ(result_false, false);
+
+  // Z negative
+  bool result_negative = _sut.buildGridSliceMsg(z_negative, msg);
+  EXPECT_EQ(result_negative, false);
+
+  // Z positive
+  bool result_positive = _sut.buildGridSliceMsg(z_positive, msg);
+  EXPECT_EQ(result_positive, true);
 }
 
 TEST_F(Grid3dTest, buildMapPointCloudMsgTest)
@@ -68,8 +92,7 @@ TEST_F(Grid3dTest, buildMapPointCloudMsgTest)
 
   sensor_msgs::PointCloud2 msg;
 
-  bool open_true = _sut.open(map_path);
-
+  // Deserialize msg
   std::ifstream ifs(source + "/tests/data/mappointcloud_msg.bin", std::ios::in | std::ios::binary);
   ifs.seekg(0, std::ios::end);
   std::streampos end = ifs.tellg();
@@ -83,9 +106,16 @@ TEST_F(Grid3dTest, buildMapPointCloudMsgTest)
   ros::serialization::deserialize(istream, msg);
   ifs.close();
 
-  bool result_true = _sut.buildMapPointCloudMsg(msg);
+  // cloud_ = false
+  bool result_false = _sut.buildMapPointCloudMsg(msg);
+  EXPECT_EQ(result_false, false);
 
+  // Open
+  bool open_true = _sut.open(map_path);
   EXPECT_EQ(open_true, true);
+
+  // cloud_ = true
+  bool result_true = _sut.buildMapPointCloudMsg(msg);
   EXPECT_EQ(result_true, true);
 }
 
@@ -94,6 +124,7 @@ TEST_F(Grid3dTest, buildGrid3d2WorldTfTest)
   std::string source = PROJECT_SOURCE_DIR;
   std::string map_path = source + "/data/map/mapfile_complete.bt";
 
+  // Expect
   tf::StampedTransform tf;
   std::string global_frame_id = "tests";
   std::string child_frame_id = "grid3d";
@@ -105,8 +136,9 @@ TEST_F(Grid3dTest, buildGrid3d2WorldTfTest)
   float r_z = 0;
   float r_w = 1;
 
+  // Open
   bool open_true = _sut.open(map_path);
-
+  // buildGrid3d2WorldTf
   _sut.buildGrid3d2WorldTf(global_frame_id, tf);
 
   float tf_p_x = tf.getOrigin().getX();
@@ -130,19 +162,19 @@ TEST_F(Grid3dTest, buildGrid3d2WorldTfTest)
 
 TEST_F(Grid3dTest, computeCloudWeightTest)
 {
+  std::string source = PROJECT_SOURCE_DIR;
+  std::string map_path = source + "/data/map/mapfile_complete.bt";
+
+  geometry_msgs::PoseArray msg;
+
+  // Expect
   float tx = 20.017967;
   float ty = 10.140815;
   float tz = 3.372801;
   float a = 0.166781;
   float wp_real = 4.32189;
 
-  std::string source = PROJECT_SOURCE_DIR;
-  std::string map_path = source + "/data/map/mapfile_complete.bt";
-
-  bool open = _sut.open(map_path);
-
-  geometry_msgs::PoseArray msg;
-
+  // Deserialize msg
   std::ifstream ifs(source + "/tests/data/points_grid.bin", std::ios::in | std::ios::binary);
   ifs.seekg(0, std::ios::end);
   std::streampos end = ifs.tellg();
@@ -167,8 +199,15 @@ TEST_F(Grid3dTest, computeCloudWeightTest)
     points_grid.push_back(point_grid);
   }
 
-  float result = _sut.computeCloudWeight(points_grid, 20.017967, 10.140815, 3.372801, 0.166781);
+  // computeCloudWeigh without Open
+  float result_0 = _sut.computeCloudWeight(points_grid, 20.017967, 10.140815, 3.372801, 0.166781);
+  EXPECT_EQ(result_0, 0);
 
+  // Open
+  bool open = _sut.open(map_path);
+
+  // computeCloudWeight in known point
+  float result = _sut.computeCloudWeight(points_grid, 20.017967, 10.140815, 3.372801, 0.166781);
   EXPECT_NEAR(result, wp_real, 0.0001);
 }
 
