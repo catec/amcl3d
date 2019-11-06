@@ -16,6 +16,7 @@
  */
 
 #include "Grid3d.h"
+#include "PointCloudTools.h"
 
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -26,18 +27,44 @@ Grid3d::Grid3d(const double sensor_dev) : sensor_dev_(sensor_dev)
 {
 }
 
-Grid3d::~Grid3d()
-{
-}
-
 bool Grid3d::open(const std::string& map_path)
 {
-  //! Load octomap
-  if (!loadOctomap(map_path))
-    return false;
+  try
+  {
+    //! Load octomap
+    auto octo_tree = openOcTree(map_path);
 
-  //! Compute the point-cloud associated to the octomap
-  computePointCloud();
+    ROS_INFO("[%s] Octomap loaded", ros::this_node::getName().data());
+
+    // Get map parameters
+    double min_x, min_y, min_z, max_x, max_y, max_z;
+    octo_tree->getMetricMin(min_x, min_y, min_z);
+    octo_tree->getMetricMax(max_x, max_y, max_z);
+    max_x_ = static_cast<float>(max_x - min_x);
+    max_y_ = static_cast<float>(max_y - min_y);
+    max_z_ = static_cast<float>(max_z - min_z);
+    min_oct_x_ = static_cast<float>(min_x);
+    min_oct_y_ = static_cast<float>(min_y);
+    min_oct_z_ = static_cast<float>(min_z);
+    resolution_ = static_cast<float>(octo_tree->getResolution());
+    one_div_res_ = 1.0f / resolution_;
+
+    ROS_INFO("[%s]"
+             "\n   Map size:"
+             "\n      X: %lf to %lf"
+             "\n      Y: %lf to %lf"
+             "\n      Z: %lf to %lf"
+             "\n      Res: %lf",
+             ros::this_node::getName().data(), min_x, max_x, min_y, max_y, min_z, max_z, resolution_);
+
+    //! Compute the point-cloud associated to the octomap
+    cloud_ = computePointCloud(octo_tree);
+  }
+  catch (std::exception &e)
+  {
+    ROS_ERROR("[%s] %s", ros::this_node::getName().data(), e.what());
+    return false;
+  }
 
   //! Try to load the associated grid-map from file
   std::string grid_path;
@@ -161,86 +188,6 @@ void Grid3d::getMinOctomap(float& x, float& y, float& z) const
   x = min_oct_x_;
   y = min_oct_y_;
   z = min_oct_z_;
-}
-
-bool Grid3d::loadOctomap(const std::string& map_path)
-{
-  if (map_path.length() <= 3)
-    return false;
-
-  if (map_path.compare(map_path.length() - 3, 3, ".bt") == 0)
-  {
-    octomap_.reset(new octomap::OcTree(0.1));
-  }
-  else if (map_path.compare(map_path.length() - 3, 3, ".ot") == 0)
-  {
-    octomap_.reset(dynamic_cast<octomap::OcTree*>(octomap::AbstractOcTree::read(map_path)));
-  }
-
-  if (!octomap_)
-  {
-    ROS_ERROR("[%s] Error: NULL octomap!!", ros::this_node::getName().data());
-    return false;
-  }
-
-  if (map_path.compare(map_path.length() - 3, 3, ".bt") == 0)
-    if (!octomap_->readBinary(map_path) || octomap_->size() <= 1)
-      return false;
-  if (map_path.compare(map_path.length() - 3, 3, ".ot") == 0)
-  {
-    octomap::AbstractOcTree* readTreeAbstract = octomap::AbstractOcTree::read(map_path);
-    if (!readTreeAbstract)
-      return false;
-  }
-
-  ROS_INFO("[%s] Octomap loaded", ros::this_node::getName().data());
-
-  // Get map parameters
-  double min_x, min_y, min_z, max_x, max_y, max_z;
-  octomap_->getMetricMin(min_x, min_y, min_z);
-  octomap_->getMetricMax(max_x, max_y, max_z);
-  max_x_ = static_cast<float>(max_x - min_x);
-  max_y_ = static_cast<float>(max_y - min_y);
-  max_z_ = static_cast<float>(max_z - min_z);
-  min_oct_x_ = static_cast<float>(min_x);
-  min_oct_y_ = static_cast<float>(min_y);
-  min_oct_z_ = static_cast<float>(min_z);
-  resolution_ = static_cast<float>(octomap_->getResolution());
-  one_div_res_ = 1.0f / resolution_;
-
-  ROS_INFO("[%s]"
-           "\n   Map size:"
-           "\n      X: %lf to %lf"
-           "\n      Y: %lf to %lf"
-           "\n      Z: %lf to %lf"
-           "\n      Res: %lf",
-           ros::this_node::getName().data(), min_x, max_x, min_y, max_y, min_z, max_z, resolution_);
-
-  return true;
-}
-
-void Grid3d::computePointCloud()
-{
-  //! Load the octomap in PCL for easy nearest neighborhood computation
-  //! The point-cloud is shifted to have (0,0,0) as min values
-  cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>());
-  cloud_->width = static_cast<uint32_t>(octomap_->size());
-  cloud_->height = 1;
-  cloud_->points.resize(cloud_->width * cloud_->height);
-
-  uint32_t i = 0;
-  for (octomap::OcTree::leaf_iterator it = octomap_->begin_leafs(); it != octomap_->end_leafs(); ++it)
-  {
-    if (it != nullptr && octomap_->isNodeOccupied(*it))
-    {
-      cloud_->points[i].x = static_cast<float>(it.getX()) - min_oct_x_;
-      cloud_->points[i].y = static_cast<float>(it.getY()) - min_oct_y_;
-      cloud_->points[i].z = static_cast<float>(it.getZ()) - min_oct_z_;
-      ++i;
-    }
-  }
-  cloud_->width = i;
-  cloud_->points.resize(i);
 }
 
 bool Grid3d::saveGrid(const std::string& grid_path)

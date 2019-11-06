@@ -31,7 +31,7 @@ class Grid3d
 {
 public:
   explicit Grid3d(const double sensor_dev);
-  virtual ~Grid3d();
+  virtual ~Grid3d() {}
 
   bool open(const std::string& map_path);
 
@@ -45,9 +45,6 @@ public:
   void getMinOctomap(float& x, float& y, float& z) const;
 
 private:
-  bool loadOctomap(const std::string& map_path);
-  void computePointCloud();
-
   bool saveGrid(const std::string& grid_path);
   bool loadGrid(const std::string& grid_path);
   void computeGrid();
@@ -58,7 +55,6 @@ private:
   double sensor_dev_;
 
   //! Octomap parameters
-  std::unique_ptr<octomap::OcTree> octomap_;
   float max_x_, max_y_, max_z_;
   float min_oct_x_, min_oct_y_, min_oct_z_;
   float resolution_, one_div_res_;
