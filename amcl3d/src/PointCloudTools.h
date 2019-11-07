@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include <octomap/OcTree.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -36,16 +34,13 @@ public:
 class Grid3dInfo
 {
 public:
-  std::unique_ptr<Grid3dCell[]> grid;
-  double   max_x  { 0 },
-           max_y  { 0 },
-           max_z  { 0 };
-  uint32_t size   { 0 },
-           size_x { 0 },
-           size_y { 0 },
-           size_z { 0 };
-  uint32_t step_y { 0 },
-           step_z { 0 };
+  std::vector<Grid3dCell> grid;
+  double sensor_dev { 0 };
+  uint32_t size_x   { 0 },
+           size_y   { 0 },
+           size_z   { 0 };
+  uint32_t step_y   { 0 },
+           step_z   { 0 };
 };
 
 class PointCloudInfo
@@ -61,12 +56,12 @@ public:
   double octo_resol { 0 };
 };
 
-std::shared_ptr<octomap::OcTree> openOcTree(const std::string& file_path);
+boost::shared_ptr<octomap::OcTree> openOcTree(const std::string& file_path);
 
 //! Load the octomap in PCL for easy nearest neighborhood computation
 //! The point-cloud is shifted to have (0,0,0) as min values
-PointCloudInfo computePointCloud(std::shared_ptr<octomap::OcTree> octo_tree);
+PointCloudInfo computePointCloud(boost::shared_ptr<octomap::OcTree> octo_tree);
 
-Grid3dInfo computeGrid(const PointCloudInfo &pc_info, const double sensor_dev);
+boost::shared_ptr<Grid3dInfo> computeGrid(const PointCloudInfo &pc_info, const double sensor_dev);
 
 }  // namespace amcl3d

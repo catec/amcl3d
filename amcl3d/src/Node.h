@@ -36,7 +36,6 @@ public:
 private:
   void publishMapPointCloud(const ros::TimerEvent&);
   void publishGridSlice(const ros::TimerEvent&);
-  void publishGridTf(const ros::TimerEvent&);
   void publishParticles();
 
   void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg);
@@ -72,9 +71,6 @@ private:
   ros::Publisher grid_slice_pub_;
   ros::Timer grid_slice_pub_timer_;
 
-  tf::StampedTransform grid_to_world_tf_;
-  ros::Timer grid_to_world_tf_timer_;
-
   bool is_odom_{ false };
   bool amcl_out_{ false };
   double roll_{ 0 }, pitch_{ 0 };
@@ -86,7 +82,7 @@ private:
   ros::Publisher particles_pose_pub_, range_markers_pub_, odom_base_pub_;
 
   tf::Transform lastbase_2_world_tf_, initodom_2_world_tf_, lastodom_2_world_tf_, amcl_out_lastbase_2_odom_tf_,
-      lastupdatebase_2_odom_tf_, base_2_odom_tf_, odom_increment_tf;
+      lastupdatebase_2_odom_tf_, base_2_odom_tf_, odom_increment_tf_;
 
   ros::Time nextupdate_time_;
 

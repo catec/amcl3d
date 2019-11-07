@@ -32,34 +32,29 @@ namespace amcl3d
 class Grid3d
 {
 public:
-  explicit Grid3d(const double sensor_dev);
+  explicit Grid3d() {}
   virtual ~Grid3d() {}
 
-  bool open(const std::string& map_path);
+  bool open(const std::string& map_path, const double sensor_dev);
 
-  bool buildGridSliceMsg(const float z, nav_msgs::OccupancyGrid& msg) const;
+  bool buildGridSliceMsg(const double z, nav_msgs::OccupancyGrid& msg) const;
   bool buildMapPointCloudMsg(sensor_msgs::PointCloud2& msg) const;
-  void buildGrid3d2WorldTf(const std::string& global_frame_id, tf::StampedTransform& tf) const;
 
-  float computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const float tx, const float ty, const float tz,
-                           const float a) const;
+  float computeCloudWeight(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+                           const float tx, const float ty, const float tz, const float a) const;
   bool isIntoMap(const float x, const float y, const float z) const;
-  void getMinOctomap(float& x, float& y, float& z) const;
 
 private:
   bool saveGrid(const std::string& grid_path);
-  bool loadGrid(const std::string& grid_path);
+  bool loadGrid(const std::string& grid_path, const double sensor_dev);
 
   inline uint32_t point2grid(const float x, const float y, const float z) const;
-
-  //! Init parameter
-  double sensor_dev_;
 
   //! 3D point cloud representation of the map
   PointCloudInfo pc_info_;
 
   //! 3D probabilistic grid cell
-  Grid3dInfo grid_info_;
+  boost::shared_ptr<Grid3dInfo> grid_info_;
 };
 
 }  // namespace amcl3d

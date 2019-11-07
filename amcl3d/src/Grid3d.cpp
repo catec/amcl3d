@@ -22,11 +22,8 @@
 
 namespace amcl3d
 {
-Grid3d::Grid3d(const double sensor_dev) : sensor_dev_(sensor_dev)
-{
-}
 
-bool Grid3d::open(const std::string& map_path)
+bool Grid3d::open(const std::string& map_path, const double sensor_dev)
 {
   try
   {
@@ -63,12 +60,12 @@ bool Grid3d::open(const std::string& map_path)
   if (map_path.compare(map_path.length() - 3, 3, ".ot") == 0)
     grid_path = map_path.substr(0, map_path.find(".ot")) + ".grid";
 
-  if (loadGrid(grid_path))
+  if (loadGrid(grid_path, sensor_dev))
     return true;
 
   //! Compute the gridMap using kdtree search over the point-cloud
   ROS_INFO("[%s] Computing 3D occupancy grid. This will take some time...", ros::this_node::getName().data());
-  grid_info_ = computeGrid(pc_info_, sensor_dev_);
+  grid_info_ = computeGrid(pc_info_, sensor_dev);
   ROS_INFO("[%s] Computing 3D occupancy grid done!", ros::this_node::getName().data());
 
   //! Save grid on file
@@ -77,34 +74,34 @@ bool Grid3d::open(const std::string& map_path)
   return true;
 }
 
-bool Grid3d::buildGridSliceMsg(const float z, nav_msgs::OccupancyGrid& msg) const
+bool Grid3d::buildGridSliceMsg(const double z, nav_msgs::OccupancyGrid& msg) const
 {
-  if (!grid_info_.grid)
+  if (!grid_info_)
     return false;
 
-  if (z < 0 || z > grid_info_.max_x)
+  if (z < pc_info_.octo_min_z || z > pc_info_.octo_max_z)
     return false;
 
-  msg.header.frame_id = "grid3d";
   msg.info.map_load_time = ros::Time::now();
   msg.info.resolution = pc_info_.octo_resol;
-  msg.info.width = grid_info_.size_x;
-  msg.info.height = grid_info_.size_y;
+  msg.info.width = grid_info_->size_x;
+  msg.info.height = grid_info_->size_y;
   msg.info.origin.position.x = 0.;
   msg.info.origin.position.y = 0.;
-  msg.info.origin.position.z = static_cast<double>(z);
+  msg.info.origin.position.z = z;
   msg.info.origin.orientation.x = 0.;
   msg.info.origin.orientation.y = 0.;
   msg.info.origin.orientation.z = 0.;
   msg.info.origin.orientation.w = 1.;
 
   //! Extract max probability
-  const uint32_t init = point2grid(0, 0, z);
-  const uint32_t end  = point2grid(grid_info_.max_x, grid_info_.max_y, z);
+  const uint32_t init = point2grid(pc_info_.octo_min_x, pc_info_.octo_min_y, z);
+  const uint32_t end  = point2grid(pc_info_.octo_max_x, pc_info_.octo_max_y, z);
   float temp_prob, max_prob = -1.0;
+  auto grid_ptr = grid_info_->grid.data();
   for (uint32_t i = init; i < end; ++i)
   {
-    temp_prob = grid_info_.grid[i].prob;
+    temp_prob = grid_ptr[i].prob;
     if (temp_prob > max_prob)
       max_prob = temp_prob;
   }
@@ -115,7 +112,7 @@ bool Grid3d::buildGridSliceMsg(const float z, nav_msgs::OccupancyGrid& msg) cons
   max_prob = 100.f / max_prob;
   msg.data.resize(end - init);
   for (uint32_t i = 0; i < msg.data.size(); ++i)
-    msg.data[i] = static_cast<int8_t>(grid_info_.grid[init + i].prob * max_prob);
+    msg.data[i] = static_cast<int8_t>(grid_ptr[init + i].prob * max_prob);
 
   return true;
 }
@@ -127,47 +124,50 @@ bool Grid3d::buildMapPointCloudMsg(sensor_msgs::PointCloud2& msg) const
 
   pcl::toROSMsg(*pc_info_.cloud, msg);
 
-  msg.header.frame_id = "grid3d";
-
   return true;
 }
 
-void Grid3d::buildGrid3d2WorldTf(const std::string& global_frame_id, tf::StampedTransform& tf) const
+float Grid3d::computeCloudWeight(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+                                 const float tx, const float ty, const float tz, const float a) const
 {
-  tf::Transform grid3d_2_world_tf;
-  grid3d_2_world_tf.setOrigin(tf::Vector3(pc_info_.octo_min_x, pc_info_.octo_min_y, pc_info_.octo_min_z));
-  grid3d_2_world_tf.setRotation(tf::Quaternion(0, 0, 0, 1));
-
-  tf = tf::StampedTransform(grid3d_2_world_tf, ros::Time::now(), global_frame_id, "grid3d");
-}
-
-float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const float tx, const float ty,
-                                 const float tz, const float a) const
-{
-  float weight = 0.;
-  int n = 0;
-
-  pcl::PointXYZ new_point;
+  if (!grid_info_)
+    return 0;
 
   const auto sa = sin(a);
   const auto ca = cos(a);
 
-  if (!grid_info_.grid)
-    return 0;
+  const auto octo_size_x = pc_info_.octo_max_x - pc_info_.octo_min_x;
+  const auto octo_size_y = pc_info_.octo_max_y - pc_info_.octo_min_y;
+  const auto octo_size_z = pc_info_.octo_max_z - pc_info_.octo_min_z;
 
-  for (uint32_t i = 0; i < points.size(); ++i)
+  const auto offset_x = tx - pc_info_.octo_min_x;
+  const auto offset_y = ty - pc_info_.octo_min_y;
+  const auto offset_z = tz - pc_info_.octo_min_z;
+
+  auto grid_ptr = grid_info_->grid.data();
+  pcl::PointXYZ new_point;
+  uint32_t grid_index;
+  float weight = 0.;
+  int n = 0;
+
+  for (pcl::PointCloud<pcl::PointXYZ>::const_iterator it = cloud->begin(); it != cloud->end(); ++it)
   {
-    const auto& p = points[i];
+    auto point = dynamic_cast<const pcl::PointXYZ *>(&(*it));
+    if (point == nullptr)
+      continue;
 
-    new_point.x = ca * p.x - sa * p.y + tx;
-    new_point.y = sa * p.x + ca * p.y + ty;
-    new_point.z = p.z + tz;
+    new_point.x = ca * point->x - sa * point->y + offset_x;
+    new_point.y = sa * point->x + ca * point->y + offset_y;
+    new_point.z = point->z + offset_z;
 
-    if (new_point.x >= 0.f && new_point.x < grid_info_.max_x &&
-        new_point.y >= 0.f && new_point.y < grid_info_.max_y &&
-        new_point.z >= 0.f && new_point.z < grid_info_.max_z)
+    if (new_point.x >= 0 && new_point.x < octo_size_x &&
+        new_point.y >= 0 && new_point.y < octo_size_y &&
+        new_point.z >= 0 && new_point.z < octo_size_z)
     {
-      weight += grid_info_.grid[point2grid(new_point.x, new_point.y, new_point.z)].prob;
+      grid_index = static_cast<uint32_t>(new_point.x / pc_info_.octo_resol) +
+                   static_cast<uint32_t>(new_point.y / pc_info_.octo_resol) * grid_info_->step_y +
+                   static_cast<uint32_t>(new_point.z / pc_info_.octo_resol) * grid_info_->step_z;
+      weight += grid_ptr[grid_index].prob;
       n += 1;
     }
   }
@@ -176,21 +176,14 @@ float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const
 
 bool Grid3d::isIntoMap(const float x, const float y, const float z) const
 {
-  return (x >= 0.f && x <= grid_info_.max_x &&
-          y >= 0.f && y <= grid_info_.max_y &&
-          z >= 0.f && z <= grid_info_.max_z);
-}
-
-void Grid3d::getMinOctomap(float& x, float& y, float& z) const
-{
-  x = pc_info_.octo_min_x;
-  y = pc_info_.octo_min_y;
-  z = pc_info_.octo_min_z;
+  return (x >= pc_info_.octo_min_x && x < pc_info_.octo_max_x &&
+          y >= pc_info_.octo_min_y && y < pc_info_.octo_max_y &&
+          z >= pc_info_.octo_min_z && z < pc_info_.octo_max_z);
 }
 
 bool Grid3d::saveGrid(const std::string& grid_path)
 {
-  if (!grid_info_.grid)
+  if (!grid_info_)
     return false;
 
   auto pf = fopen(grid_path.c_str(), "wb");
@@ -201,14 +194,14 @@ bool Grid3d::saveGrid(const std::string& grid_path)
   }
 
   //! Write grid general info
-  fwrite(&grid_info_.size, sizeof(uint32_t), 1, pf);
-  fwrite(&grid_info_.size_x, sizeof(uint32_t), 1, pf);
-  fwrite(&grid_info_.size_y, sizeof(uint32_t), 1, pf);
-  fwrite(&grid_info_.size_z, sizeof(uint32_t), 1, pf);
-  fwrite(&sensor_dev_, sizeof(double), 1, pf);
+  fwrite(&grid_info_->size_x,     sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info_->size_y,     sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info_->size_z,     sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info_->sensor_dev, sizeof(double),   1, pf);
 
   //! Write grid cells
-  fwrite(grid_info_.grid.get(), sizeof(Grid3dCell), grid_info_.size, pf);
+  const auto grid_size = grid_info_->size_x * grid_info_->size_y * grid_info_->size_z;
+  fwrite(grid_info_->grid.data(), sizeof(Grid3dCell), grid_size, pf);
 
   fclose(pf);
 
@@ -217,7 +210,7 @@ bool Grid3d::saveGrid(const std::string& grid_path)
   return true;
 }
 
-bool Grid3d::loadGrid(const std::string& grid_path)
+bool Grid3d::loadGrid(const std::string& grid_path, const double sensor_dev)
 {
   auto pf = fopen(grid_path.c_str(), "rb");
   if (!pf)
@@ -226,26 +219,28 @@ bool Grid3d::loadGrid(const std::string& grid_path)
     return false;
   }
 
-  //! Read grid general info
-  double sensor_dev;
-  fread(&grid_info_.size, sizeof(uint32_t), 1, pf);
-  fread(&grid_info_.size_x, sizeof(uint32_t), 1, pf);
-  fread(&grid_info_.size_y, sizeof(uint32_t), 1, pf);
-  fread(&grid_info_.size_z, sizeof(uint32_t), 1, pf);
-  fread(&sensor_dev, sizeof(double), 1, pf);
+  grid_info_.reset(new Grid3dInfo());
 
-  if (std::fabs(sensor_dev - sensor_dev_) >= std::numeric_limits<double>::epsilon())
+  //! Read grid general info
+  fread(&grid_info_->size_x,     sizeof(uint32_t), 1, pf);
+  fread(&grid_info_->size_y,     sizeof(uint32_t), 1, pf);
+  fread(&grid_info_->size_z,     sizeof(uint32_t), 1, pf);
+  fread(&grid_info_->sensor_dev, sizeof(double),   1, pf);
+
+  if (std::fabs(grid_info_->sensor_dev - sensor_dev) >=
+      std::numeric_limits<double>::epsilon())
   {
     ROS_ERROR("[%s] Loaded sensorDev is different", ros::this_node::getName().data());
     return false;
   }
 
-  grid_info_.step_y = grid_info_.size_x;
-  grid_info_.step_z = grid_info_.size_x * grid_info_.size_y;
+  grid_info_->step_y = grid_info_->size_x;
+  grid_info_->step_z = grid_info_->size_x * grid_info_->size_y;
 
   //! Read grid cells
-  grid_info_.grid.reset(new Grid3dCell[grid_info_.size]);
-  fread(grid_info_.grid.get(), sizeof(Grid3dCell), grid_info_.size, pf);
+  const auto grid_size = grid_info_->size_x * grid_info_->size_y * grid_info_->size_z;
+  grid_info_->grid.resize(grid_size);
+  fread(grid_info_->grid.data(), sizeof(Grid3dCell), grid_size, pf);
 
   fclose(pf);
 
@@ -256,9 +251,9 @@ bool Grid3d::loadGrid(const std::string& grid_path)
 
 inline uint32_t Grid3d::point2grid(const float x, const float y, const float z) const
 {
-  return static_cast<uint32_t>(x / pc_info_.octo_resol) +
-         static_cast<uint32_t>(y / pc_info_.octo_resol) * grid_info_.step_y +
-         static_cast<uint32_t>(z / pc_info_.octo_resol) * grid_info_.step_z;
+  return static_cast<uint32_t>((x - pc_info_.octo_min_x) / pc_info_.octo_resol) +
+         static_cast<uint32_t>((y - pc_info_.octo_min_y) / pc_info_.octo_resol) * grid_info_->step_y +
+         static_cast<uint32_t>((z - pc_info_.octo_min_z) / pc_info_.octo_resol) * grid_info_->step_z;
 }
 
 }  // namespace amcl3d

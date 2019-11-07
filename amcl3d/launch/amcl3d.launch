@@ -66,13 +66,10 @@
     <param name="publish_point_cloud_rate" value="10"/>
 
     <!-- To set the Z-axis for the grid slice -->
-    <param name="grid_slice" value="-1.0"/>
+    <param name="grid_slice_z" value="-1.0"/>
 
     <!-- To set the rate for publishing the grid slice -->
     <param name="publish_grid_slice_rate" value="10"/>
-
-    <!-- To set the rate for publishing the grid TF -->
-    <param name="publish_grid_tf_rate" value="10"/>
 
     <!-- To set the deviation of 3D laser sensor -->
     <param name="sensor_dev" value="0.05"/>

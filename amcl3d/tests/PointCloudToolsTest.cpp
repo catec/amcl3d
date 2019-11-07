@@ -29,7 +29,7 @@ class PointCloudToolsTest : public ::testing::Test
 protected:
   void openOcTreeFromBtFile()
   {
-    std::shared_ptr<octomap::OcTree> octo_tree;
+    boost::shared_ptr<octomap::OcTree> octo_tree;
 
     const std::string file_path = DATA_DIR + "/map/mapfile_complete.bt";
 
@@ -55,13 +55,13 @@ protected:
     _octo_tree = octo_tree;
   }
 
-  std::shared_ptr<octomap::OcTree> _octo_tree;
+  boost::shared_ptr<octomap::OcTree> _octo_tree;
 };
 
 
 TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromNonExistentFile)
 {
-  std::shared_ptr<octomap::OcTree> octo_tree;
+  boost::shared_ptr<octomap::OcTree> octo_tree;
 
   ASSERT_THROW(octo_tree = openOcTree("unknown_file.bt"), std::runtime_error);
   ASSERT_EQ(octo_tree.get(), nullptr);
@@ -75,7 +75,7 @@ TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromNonExistentFile)
 
 TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromWrongBtFile)
 {
-  std::shared_ptr<octomap::OcTree> octo_tree;
+  boost::shared_ptr<octomap::OcTree> octo_tree;
 
   const std::string file_path = DATA_DIR + "/map/mapfile_wrong.bt";
 
@@ -85,7 +85,7 @@ TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromWrongBtFile)
 
 TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromWrongOtFile)
 {
-  std::shared_ptr<octomap::OcTree> octo_tree;
+  boost::shared_ptr<octomap::OcTree> octo_tree;
 
   const std::string file_path = DATA_DIR + "/map/mapfile_wrong.ot";
 
@@ -95,7 +95,7 @@ TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromWrongOtFile)
 
 TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromUnknownExtension)
 {
-  std::shared_ptr<octomap::OcTree> octo_tree;
+  boost::shared_ptr<octomap::OcTree> octo_tree;
 
   const std::string file_path = DATA_DIR + "/map/mapfile_unknown_extension.unk";
 
@@ -110,7 +110,7 @@ TEST_F(PointCloudToolsTest, shouldOpenOcTreeFromBtFile)
 
 TEST_F(PointCloudToolsTest, shouldOpenOcTreeFromOtFile)
 {
-  std::shared_ptr<octomap::OcTree> octo_tree;
+  boost::shared_ptr<octomap::OcTree> octo_tree;
 
   const std::string file_path = DATA_DIR + "/map/mapfile_complete_ot.ot";
 
@@ -155,7 +155,7 @@ TEST_F(PointCloudToolsTest, shouldNotComputePointCloudWithEmptyOctoTree)
 {
   PointCloudInfo pc_info;
 
-  std::shared_ptr<octomap::OcTree> octo_tree(new octomap::OcTree(0.1));
+  boost::shared_ptr<octomap::OcTree> octo_tree(new octomap::OcTree(0.1));
 
   ASSERT_THROW(pc_info = computePointCloud(octo_tree), std::runtime_error);
 

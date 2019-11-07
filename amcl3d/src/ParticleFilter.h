@@ -74,7 +74,7 @@ public:
     return mean_;
   }
 
-  void buildParticlesPoseMsg(const geometry_msgs::Point32& offset, geometry_msgs::PoseArray& msg) const;
+  void buildParticlesPoseMsg(geometry_msgs::PoseArray& msg) const;
 
   //! Set the initial pose of the particle filter
   void init(const int num_particles, const float x_init, const float y_init, const float z_init, const float a_init,
@@ -86,8 +86,8 @@ public:
                const double delta_x, const double delta_y, const double delta_z, const double delta_a);
 
   //! Update Particles with a pointcloud update
-  void update(const Grid3d& grid3d, const std::vector<pcl::PointXYZ>& points, const std::vector<Range>& range_data,
-              const double alpha, const double sigma);
+  void update(const Grid3d& grid3d, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+              const std::vector<Range>& range_data, const double alpha, const double sigma);
 
   //! Resample the set of particles using low-variance sampling
   void resample();

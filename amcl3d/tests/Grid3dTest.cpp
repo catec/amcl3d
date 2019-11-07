@@ -4,13 +4,11 @@
 
 using namespace amcl3d;
 
+static const double DEFAULT_SENSOR_DEV = 0.05;
+
 class Grid3dTest : public ::testing::Test
 {
 protected:
-  Grid3dTest() : _sut(0.05)
-  {
-  }
-
   Grid3d _sut;
 };
 
@@ -20,27 +18,27 @@ TEST_F(Grid3dTest, openTest)
 
   // Open .bt
   std::string map_path_bt = source + "/data/map/mapfile_complete.bt";
-  bool open_true_bt = _sut.open(map_path_bt);
+  bool open_true_bt = _sut.open(map_path_bt, DEFAULT_SENSOR_DEV);
   EXPECT_EQ(open_true_bt, true);
 
   // Open .ot
   std::string map_path_ot = source + "/data/map/mapfile_complete_ot.ot";
-  bool open_true_ot = _sut.open(map_path_ot);
+  bool open_true_ot = _sut.open(map_path_ot, DEFAULT_SENSOR_DEV);
   EXPECT_EQ(open_true_ot, true);
 
   // Open null .bt
   std::string map_path_nullbt = source + "/tests/data/mapfile_null.bt";
-  bool open_false_nullbt = _sut.open(map_path_nullbt);
+  bool open_false_nullbt = _sut.open(map_path_nullbt, DEFAULT_SENSOR_DEV);
   EXPECT_EQ(open_false_nullbt, false);
 
   // Open null .ot
   std::string map_path_nullot = source + "/tests/data/mapfile_null.ot";
-  bool open_false_nullot = _sut.open(map_path_nullot);
+  bool open_false_nullot = _sut.open(map_path_nullot, DEFAULT_SENSOR_DEV);
   EXPECT_EQ(open_false_nullot, false);
 
   // Open map_path.length() <= 3
   std::string map_path_false = ".bt";
-  bool open_false = _sut.open(map_path_false);
+  bool open_false = _sut.open(map_path_false, DEFAULT_SENSOR_DEV);
   EXPECT_EQ(open_false, false);
 }
 
@@ -73,7 +71,7 @@ TEST_F(Grid3dTest, buildGridSliceMsgTest)
   EXPECT_EQ(result_open, false);
 
   // Open
-  bool open_true = _sut.open(map_path);
+  bool open_true = _sut.open(map_path, DEFAULT_SENSOR_DEV);
   EXPECT_EQ(open_true, true);
 
   // Z negative
@@ -111,53 +109,12 @@ TEST_F(Grid3dTest, buildMapPointCloudMsgTest)
   EXPECT_EQ(result_false, false);
 
   // Open
-  bool open_true = _sut.open(map_path);
+  bool open_true = _sut.open(map_path, DEFAULT_SENSOR_DEV);
   EXPECT_EQ(open_true, true);
 
   // cloud_ = true
   bool result_true = _sut.buildMapPointCloudMsg(msg);
   EXPECT_EQ(result_true, true);
-}
-
-TEST_F(Grid3dTest, buildGrid3d2WorldTfTest)
-{
-  std::string source = PROJECT_SOURCE_DIR;
-  std::string map_path = source + "/data/map/mapfile_complete.bt";
-
-  // Expect
-  tf::StampedTransform tf;
-  std::string global_frame_id = "tests";
-  std::string child_frame_id = "grid3d";
-  float p_x = -17.35;
-  float p_y = -9.5;
-  float p_z = -1.4;
-  float r_x = 0;
-  float r_y = 0;
-  float r_z = 0;
-  float r_w = 1;
-
-  // Open
-  bool open_true = _sut.open(map_path);
-  // buildGrid3d2WorldTf
-  _sut.buildGrid3d2WorldTf(global_frame_id, tf);
-
-  float tf_p_x = tf.getOrigin().getX();
-  float tf_p_y = tf.getOrigin().getY();
-  float tf_p_z = tf.getOrigin().getZ();
-  float tf_r_x = tf.getRotation().getX();
-  float tf_r_y = tf.getRotation().getY();
-  float tf_r_z = tf.getRotation().getZ();
-  float tf_r_w = tf.getRotation().getW();
-
-  EXPECT_EQ(tf.child_frame_id_, child_frame_id);
-  EXPECT_EQ(tf.frame_id_, global_frame_id);
-  EXPECT_EQ(tf_p_x, p_x);
-  EXPECT_EQ(tf_p_y, p_y);
-  EXPECT_EQ(tf_p_z, p_z);
-  EXPECT_EQ(tf_r_x, r_x);
-  EXPECT_EQ(tf_r_y, r_y);
-  EXPECT_EQ(tf_r_z, r_z);
-  EXPECT_EQ(tf_r_w, r_w);
 }
 
 TEST_F(Grid3dTest, computeCloudWeightTest)
@@ -188,7 +145,8 @@ TEST_F(Grid3dTest, computeCloudWeightTest)
   ros::serialization::deserialize(istream, msg);
   ifs.close();
 
-  std::vector<pcl::PointXYZ> points_grid;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr points_grid(
+    new pcl::PointCloud<pcl::PointXYZ>());
   pcl::PointXYZ point_grid;
   for (int i = 0; i < msg.poses.size(); i++)
   {
@@ -196,7 +154,7 @@ TEST_F(Grid3dTest, computeCloudWeightTest)
     point_grid.y = msg.poses[i].position.y;
     point_grid.z = msg.poses[i].position.z;
 
-    points_grid.push_back(point_grid);
+    points_grid->push_back(point_grid);
   }
 
   // computeCloudWeigh without Open
@@ -204,7 +162,7 @@ TEST_F(Grid3dTest, computeCloudWeightTest)
   EXPECT_EQ(result_0, 0);
 
   // Open
-  bool open = _sut.open(map_path);
+  bool open = _sut.open(map_path, DEFAULT_SENSOR_DEV);
 
   // computeCloudWeight in known point
   float result = _sut.computeCloudWeight(points_grid, 20.017967, 10.140815, 3.372801, 0.166781);
@@ -219,7 +177,7 @@ TEST_F(Grid3dTest, computeCloudWeightParticlesTest)
   std::string source = PROJECT_SOURCE_DIR;
   std::string map_path = source + "/data/map/mapfile_complete.bt";
 
-  bool open = _sut.open(map_path);
+  bool open = _sut.open(map_path, DEFAULT_SENSOR_DEV);
 
   geometry_msgs::PoseArray msg_pos;
   geometry_msgs::PoseArray msg;
@@ -243,7 +201,8 @@ TEST_F(Grid3dTest, computeCloudWeightParticlesTest)
   ros::serialization::deserialize(istream, msg);
   ifs.close();
 
-  std::vector<pcl::PointXYZ> points_grid;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr points_grid(
+    new pcl::PointCloud<pcl::PointXYZ>());
   pcl::PointXYZ point_grid;
   for (int i = 0; i < msg.poses.size(); i++)
   {
@@ -251,7 +210,7 @@ TEST_F(Grid3dTest, computeCloudWeightParticlesTest)
     point_grid.y = msg.poses[i].position.y;
     point_grid.z = msg.poses[i].position.z;
 
-    points_grid.push_back(point_grid);
+    points_grid->push_back(point_grid);
   }
 
   // Deserialize information about particles
@@ -298,7 +257,7 @@ TEST_F(Grid3dTest, isIntoMapTest)
   std::string source = PROJECT_SOURCE_DIR;
   std::string map_path = source + "/data/map/mapfile_complete.bt";
 
-  bool open = _sut.open(map_path);
+  bool open = _sut.open(map_path, DEFAULT_SENSOR_DEV);
 
   bool isInto = _sut.isIntoMap(x_into, y_into, z_into);
   bool isNotInto = _sut.isIntoMap(x_ninto, y_ninto, z_ninto);
@@ -306,24 +265,4 @@ TEST_F(Grid3dTest, isIntoMapTest)
   EXPECT_EQ(open, true);
   EXPECT_EQ(isInto, true);
   EXPECT_EQ(isNotInto, false);
-}
-
-TEST_F(Grid3dTest, getMinOctomapTest)
-{
-  float x, y, z;
-  float x_min_oct = -17.35;
-  float y_min_oct = -9.5;
-  float z_min_oct = -1.4;
-
-  std::string source = PROJECT_SOURCE_DIR;
-  std::string map_path = source + "/data/map/mapfile_complete.bt";
-
-  bool open = _sut.open(map_path);
-
-  _sut.getMinOctomap(x, y, z);
-
-  EXPECT_EQ(open, true);
-  EXPECT_EQ(x, x_min_oct);
-  EXPECT_EQ(y, y_min_oct);
-  EXPECT_EQ(z, z_min_oct);
 }

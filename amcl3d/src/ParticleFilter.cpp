@@ -27,15 +27,15 @@ ParticleFilter::~ParticleFilter()
 {
 }
 
-void ParticleFilter::buildParticlesPoseMsg(const geometry_msgs::Point32& offset, geometry_msgs::PoseArray& msg) const
+void ParticleFilter::buildParticlesPoseMsg(geometry_msgs::PoseArray& msg) const
 {
   msg.poses.resize(p_.size());
 
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
-    msg.poses[i].position.x = static_cast<double>(p_[i].x) + offset.x;
-    msg.poses[i].position.y = static_cast<double>(p_[i].y) + offset.y;
-    msg.poses[i].position.z = static_cast<double>(p_[i].z) + offset.z;
+    msg.poses[i].position.x = static_cast<double>(p_[i].x);
+    msg.poses[i].position.y = static_cast<double>(p_[i].y);
+    msg.poses[i].position.z = static_cast<double>(p_[i].z);
     msg.poses[i].orientation.x = 0.;
     msg.poses[i].orientation.y = 0.;
     msg.poses[i].orientation.z = sin(static_cast<double>(p_[i].a * 0.5f));
@@ -118,7 +118,7 @@ void ParticleFilter::predict(const double odom_x_mod, const double odom_y_mod, c
   }
 }
 
-void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXYZ>& points,
+void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
                             const std::vector<Range>& range_data, const double alpha, const double sigma)
 {
   //! Incorporate measurements
@@ -141,7 +141,7 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
     }
 
     //! Evaluate the weight of the point cloud
-    p_[i].wp = grid3d.computeCloudWeight(points, tx, ty, tz, p_[i].a);
+    p_[i].wp = grid3d.computeCloudWeight(cloud, tx, ty, tz, p_[i].a);
 
     //! Evaluate the weight of the range sensors
     p_[i].wr = computeRangeWeight(tx, ty, tz, range_data, sigma);

@@ -35,10 +35,9 @@ public:
   double init_x_, init_y_, init_z_, init_a_;
   double init_x_dev_, init_y_dev_, init_z_dev_, init_a_dev_;
 
-  float grid_slice_;
+  double grid_slice_z_;
   double publish_point_cloud_rate_;
   double publish_grid_slice_rate_;
-  double publish_grid_tf_rate_;
 
   double sensor_dev_;
   double sensor_range_;
