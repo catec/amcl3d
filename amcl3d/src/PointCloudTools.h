@@ -34,6 +34,10 @@ public:
 class Grid3dInfo
 {
 public:
+  // Boost shared pointers
+  typedef boost::shared_ptr<Grid3dInfo> Ptr;
+  typedef boost::shared_ptr<const Grid3dInfo> ConstPtr;
+
   std::vector<Grid3dCell> grid;
   double sensor_dev { 0 };
   uint32_t size_x   { 0 },
@@ -46,6 +50,10 @@ public:
 class PointCloudInfo
 {
 public:
+  // Boost shared pointers
+  typedef boost::shared_ptr<PointCloudInfo> Ptr;
+  typedef boost::shared_ptr<const PointCloudInfo> ConstPtr;
+
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
   double octo_min_x { 0 },
          octo_min_y { 0 },
@@ -60,8 +68,8 @@ boost::shared_ptr<octomap::OcTree> openOcTree(const std::string& file_path);
 
 //! Load the octomap in PCL for easy nearest neighborhood computation
 //! The point-cloud is shifted to have (0,0,0) as min values
-PointCloudInfo computePointCloud(boost::shared_ptr<octomap::OcTree> octo_tree);
+PointCloudInfo::Ptr computePointCloud(boost::shared_ptr<octomap::OcTree> octo_tree);
 
-boost::shared_ptr<Grid3dInfo> computeGrid(const PointCloudInfo &pc_info, const double sensor_dev);
+Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev);
 
 }  // namespace amcl3d

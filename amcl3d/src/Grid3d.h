@@ -51,10 +51,10 @@ private:
   inline uint32_t point2grid(const float x, const float y, const float z) const;
 
   //! 3D point cloud representation of the map
-  PointCloudInfo pc_info_;
+  PointCloudInfo::Ptr pc_info_;
 
   //! 3D probabilistic grid cell
-  boost::shared_ptr<Grid3dInfo> grid_info_;
+  Grid3dInfo::Ptr grid_info_;
 };
 
 }  // namespace amcl3d

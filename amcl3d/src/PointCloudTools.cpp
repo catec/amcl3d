@@ -49,7 +49,7 @@ boost::shared_ptr<octomap::OcTree> openOcTree(const std::string& file_path)
   return octo_tree;
 }
 
-PointCloudInfo computePointCloud(boost::shared_ptr<octomap::OcTree> octo_tree)
+PointCloudInfo::Ptr computePointCloud(boost::shared_ptr<octomap::OcTree> octo_tree)
 {
   if (!octo_tree)
     throw std::runtime_error("OcTree is NULL");
@@ -58,13 +58,13 @@ PointCloudInfo computePointCloud(boost::shared_ptr<octomap::OcTree> octo_tree)
   if (octo_size <= 1)
     throw std::runtime_error("OcTree is empty");
 
-  PointCloudInfo pc_info;
+  PointCloudInfo::Ptr pc_info(new PointCloudInfo());
 
-  octo_tree->getMetricMin(pc_info.octo_min_x, pc_info.octo_min_y, pc_info.octo_min_z);
-  octo_tree->getMetricMax(pc_info.octo_max_x, pc_info.octo_max_y, pc_info.octo_max_z);
-  pc_info.octo_resol = octo_tree->getResolution();
+  octo_tree->getMetricMin(pc_info->octo_min_x, pc_info->octo_min_y, pc_info->octo_min_z);
+  octo_tree->getMetricMax(pc_info->octo_max_x, pc_info->octo_max_y, pc_info->octo_max_z);
+  pc_info->octo_resol = octo_tree->getResolution();
 
-  pc_info.cloud.reset(new pcl::PointCloud<pcl::PointXYZ>());
+  pc_info->cloud.reset(new pcl::PointCloud<pcl::PointXYZ>());
 
   pcl::PointXYZ point;
   for (octomap::OcTree::leaf_iterator it = octo_tree->begin_leafs(); it != octo_tree->end_leafs(); ++it)
@@ -75,25 +75,28 @@ PointCloudInfo computePointCloud(boost::shared_ptr<octomap::OcTree> octo_tree)
       point.y = static_cast<float>(it.getY());
       point.z = static_cast<float>(it.getZ());
 
-      pc_info.cloud->push_back(point);
+      pc_info->cloud->push_back(point);
     }
   }
 
   return pc_info;
 }
 
-boost::shared_ptr<Grid3dInfo> computeGrid(const PointCloudInfo &pc_info, const double sensor_dev)
+Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev)
 {
-  boost::shared_ptr<Grid3dInfo> grid_info(new Grid3dInfo());
+  if (!pc_info)
+    throw std::runtime_error("PointCloudInfo is NULL");
+
+  Grid3dInfo::Ptr grid_info(new Grid3dInfo());
   grid_info->sensor_dev = sensor_dev;
 
   //! Alloc the 3D grid
-  const auto octo_size_x = pc_info.octo_max_x - pc_info.octo_min_x;
-  const auto octo_size_y = pc_info.octo_max_y - pc_info.octo_min_y;
-  const auto octo_size_z = pc_info.octo_max_z - pc_info.octo_min_z;
-  grid_info->size_x = static_cast<uint32_t>(octo_size_x / pc_info.octo_resol);
-  grid_info->size_y = static_cast<uint32_t>(octo_size_y / pc_info.octo_resol);
-  grid_info->size_z = static_cast<uint32_t>(octo_size_z / pc_info.octo_resol);
+  const auto octo_size_x = pc_info->octo_max_x - pc_info->octo_min_x;
+  const auto octo_size_y = pc_info->octo_max_y - pc_info->octo_min_y;
+  const auto octo_size_z = pc_info->octo_max_z - pc_info->octo_min_z;
+  grid_info->size_x = static_cast<uint32_t>(octo_size_x / pc_info->octo_resol);
+  grid_info->size_y = static_cast<uint32_t>(octo_size_y / pc_info->octo_resol);
+  grid_info->size_z = static_cast<uint32_t>(octo_size_z / pc_info->octo_resol);
 
   grid_info->step_y = grid_info->size_x;
   grid_info->step_z = grid_info->size_x * grid_info->size_y;
@@ -103,7 +106,7 @@ boost::shared_ptr<Grid3dInfo> computeGrid(const PointCloudInfo &pc_info, const d
 
   //! Setup kdtree
   pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-  kdtree.setInputCloud(pc_info.cloud);
+  kdtree.setInputCloud(pc_info->cloud);
 
   //! Compute the distance to the closest point of the grid
   const float gauss_const1 = static_cast<float>(1. / (grid_info->sensor_dev * sqrt(2 * M_PI)));
@@ -119,9 +122,9 @@ boost::shared_ptr<Grid3dInfo> computeGrid(const PointCloudInfo &pc_info, const d
     {
       for (uint32_t ix = 0; ix < grid_info->size_x; ++ix)
       {
-        search_point.x = pc_info.octo_min_x + (ix * pc_info.octo_resol);
-        search_point.y = pc_info.octo_min_y + (iy * pc_info.octo_resol);
-        search_point.z = pc_info.octo_min_z + (iz * pc_info.octo_resol);
+        search_point.x = pc_info->octo_min_x + (ix * pc_info->octo_resol);
+        search_point.y = pc_info->octo_min_y + (iy * pc_info->octo_resol);
+        search_point.z = pc_info->octo_min_z + (iz * pc_info->octo_resol);
 
         index = ix + iy * grid_info->step_y + iz * grid_info->step_z;
 
