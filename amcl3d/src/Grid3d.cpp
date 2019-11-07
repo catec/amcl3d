@@ -16,7 +16,6 @@
  */
 
 #include "Grid3d.h"
-#include "PointCloudTools.h"
 
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -36,18 +35,8 @@ bool Grid3d::open(const std::string& map_path)
 
     ROS_INFO("[%s] Octomap loaded", ros::this_node::getName().data());
 
-    // Get map parameters
-    double min_x, min_y, min_z, max_x, max_y, max_z;
-    octo_tree->getMetricMin(min_x, min_y, min_z);
-    octo_tree->getMetricMax(max_x, max_y, max_z);
-    max_x_ = static_cast<float>(max_x - min_x);
-    max_y_ = static_cast<float>(max_y - min_y);
-    max_z_ = static_cast<float>(max_z - min_z);
-    min_oct_x_ = static_cast<float>(min_x);
-    min_oct_y_ = static_cast<float>(min_y);
-    min_oct_z_ = static_cast<float>(min_z);
-    resolution_ = static_cast<float>(octo_tree->getResolution());
-    one_div_res_ = 1.0f / resolution_;
+    //! Compute the point-cloud associated to the octomap
+    pc_info_ = computePointCloud(octo_tree);
 
     ROS_INFO("[%s]"
              "\n   Map size:"
@@ -55,10 +44,11 @@ bool Grid3d::open(const std::string& map_path)
              "\n      Y: %lf to %lf"
              "\n      Z: %lf to %lf"
              "\n      Res: %lf",
-             ros::this_node::getName().data(), min_x, max_x, min_y, max_y, min_z, max_z, resolution_);
-
-    //! Compute the point-cloud associated to the octomap
-    cloud_ = computePointCloud(octo_tree);
+             ros::this_node::getName().data(),
+             pc_info_.octo_min_x, pc_info_.octo_max_x,
+             pc_info_.octo_min_y, pc_info_.octo_max_y,
+             pc_info_.octo_min_z, pc_info_.octo_max_z,
+             pc_info_.octo_resol);
   }
   catch (std::exception &e)
   {
@@ -77,7 +67,9 @@ bool Grid3d::open(const std::string& map_path)
     return true;
 
   //! Compute the gridMap using kdtree search over the point-cloud
-  computeGrid();
+  ROS_INFO("[%s] Computing 3D occupancy grid. This will take some time...", ros::this_node::getName().data());
+  grid_info_ = computeGrid(pc_info_, sensor_dev_);
+  ROS_INFO("[%s] Computing 3D occupancy grid done!", ros::this_node::getName().data());
 
   //! Save grid on file
   saveGrid(grid_path);
@@ -87,17 +79,17 @@ bool Grid3d::open(const std::string& map_path)
 
 bool Grid3d::buildGridSliceMsg(const float z, nav_msgs::OccupancyGrid& msg) const
 {
-  if (!grid_)
+  if (!grid_info_.grid)
     return false;
 
-  if (z < 0 || z > max_z_)
+  if (z < 0 || z > grid_info_.max_x)
     return false;
 
   msg.header.frame_id = "grid3d";
   msg.info.map_load_time = ros::Time::now();
-  msg.info.resolution = resolution_;
-  msg.info.width = grid_size_x_;
-  msg.info.height = grid_size_y_;
+  msg.info.resolution = pc_info_.octo_resol;
+  msg.info.width = grid_info_.size_x;
+  msg.info.height = grid_info_.size_y;
   msg.info.origin.position.x = 0.;
   msg.info.origin.position.y = 0.;
   msg.info.origin.position.z = static_cast<double>(z);
@@ -105,32 +97,35 @@ bool Grid3d::buildGridSliceMsg(const float z, nav_msgs::OccupancyGrid& msg) cons
   msg.info.origin.orientation.y = 0.;
   msg.info.origin.orientation.z = 0.;
   msg.info.origin.orientation.w = 1.;
-  msg.data.resize(grid_size_x_ * grid_size_y_);
 
   //! Extract max probability
-  const uint32_t offset = static_cast<uint32_t>(z * one_div_res_) * grid_size_x_ * grid_size_y_;
-  const uint32_t end = offset + grid_size_x_ * grid_size_y_;
-  float max_prob = -1.0;
-  for (uint32_t i = offset; i < end; ++i)
-    if (grid_[i].prob > max_prob)
-      max_prob = grid_[i].prob;
+  const uint32_t init = point2grid(0, 0, z);
+  const uint32_t end  = point2grid(grid_info_.max_x, grid_info_.max_y, z);
+  float temp_prob, max_prob = -1.0;
+  for (uint32_t i = init; i < end; ++i)
+  {
+    temp_prob = grid_info_.grid[i].prob;
+    if (temp_prob > max_prob)
+      max_prob = temp_prob;
+  }
 
   //! Copy data into grid msg and scale the probability to [0, 100]
   if (max_prob < 0.000001f)
     max_prob = 0.000001f;
   max_prob = 100.f / max_prob;
-  for (uint32_t i = 0; i < grid_size_x_ * grid_size_y_; ++i)
-    msg.data[i] = static_cast<int8_t>(grid_[i + offset].prob * max_prob);
+  msg.data.resize(end - init);
+  for (uint32_t i = 0; i < msg.data.size(); ++i)
+    msg.data[i] = static_cast<int8_t>(grid_info_.grid[init + i].prob * max_prob);
 
   return true;
 }
 
 bool Grid3d::buildMapPointCloudMsg(sensor_msgs::PointCloud2& msg) const
 {
-  if (!cloud_)
+  if (!pc_info_.cloud)
     return false;
 
-  pcl::toROSMsg(*cloud_, msg);
+  pcl::toROSMsg(*pc_info_.cloud, msg);
 
   msg.header.frame_id = "grid3d";
 
@@ -140,7 +135,7 @@ bool Grid3d::buildMapPointCloudMsg(sensor_msgs::PointCloud2& msg) const
 void Grid3d::buildGrid3d2WorldTf(const std::string& global_frame_id, tf::StampedTransform& tf) const
 {
   tf::Transform grid3d_2_world_tf;
-  grid3d_2_world_tf.setOrigin(tf::Vector3(min_oct_x_, min_oct_y_, min_oct_z_));
+  grid3d_2_world_tf.setOrigin(tf::Vector3(pc_info_.octo_min_x, pc_info_.octo_min_y, pc_info_.octo_min_z));
   grid3d_2_world_tf.setRotation(tf::Quaternion(0, 0, 0, 1));
 
   tf = tf::StampedTransform(grid3d_2_world_tf, ros::Time::now(), global_frame_id, "grid3d");
@@ -157,7 +152,7 @@ float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const
   const auto sa = sin(a);
   const auto ca = cos(a);
 
-  if (!grid_)
+  if (!grid_info_.grid)
     return 0;
 
   for (uint32_t i = 0; i < points.size(); ++i)
@@ -168,10 +163,11 @@ float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const
     new_point.y = sa * p.x + ca * p.y + ty;
     new_point.z = p.z + tz;
 
-    if (new_point.x >= 0.f && new_point.y >= 0.f && new_point.z >= 0.f && new_point.x < max_x_ &&
-        new_point.y < max_y_ && new_point.z < max_z_)
+    if (new_point.x >= 0.f && new_point.x < grid_info_.max_x &&
+        new_point.y >= 0.f && new_point.y < grid_info_.max_y &&
+        new_point.z >= 0.f && new_point.z < grid_info_.max_z)
     {
-      weight += grid_[point2grid(new_point.x, new_point.y, new_point.z)].prob;
+      weight += grid_info_.grid[point2grid(new_point.x, new_point.y, new_point.z)].prob;
       n += 1;
     }
   }
@@ -180,18 +176,23 @@ float Grid3d::computeCloudWeight(const std::vector<pcl::PointXYZ>& points, const
 
 bool Grid3d::isIntoMap(const float x, const float y, const float z) const
 {
-  return (x >= 0.f && y >= 0.f && z >= 0.f && x <= max_x_ && y <= max_y_ && z <= max_z_);
+  return (x >= 0.f && x <= grid_info_.max_x &&
+          y >= 0.f && y <= grid_info_.max_y &&
+          z >= 0.f && z <= grid_info_.max_z);
 }
 
 void Grid3d::getMinOctomap(float& x, float& y, float& z) const
 {
-  x = min_oct_x_;
-  y = min_oct_y_;
-  z = min_oct_z_;
+  x = pc_info_.octo_min_x;
+  y = pc_info_.octo_min_y;
+  z = pc_info_.octo_min_z;
 }
 
 bool Grid3d::saveGrid(const std::string& grid_path)
 {
+  if (!grid_info_.grid)
+    return false;
+
   auto pf = fopen(grid_path.c_str(), "wb");
   if (!pf)
   {
@@ -200,14 +201,14 @@ bool Grid3d::saveGrid(const std::string& grid_path)
   }
 
   //! Write grid general info
-  fwrite(&grid_size_, sizeof(uint32_t), 1, pf);
-  fwrite(&grid_size_x_, sizeof(uint32_t), 1, pf);
-  fwrite(&grid_size_y_, sizeof(uint32_t), 1, pf);
-  fwrite(&grid_size_z_, sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info_.size, sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info_.size_x, sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info_.size_y, sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info_.size_z, sizeof(uint32_t), 1, pf);
   fwrite(&sensor_dev_, sizeof(double), 1, pf);
 
   //! Write grid cells
-  fwrite(grid_.get(), sizeof(GridCell), grid_size_, pf);
+  fwrite(grid_info_.grid.get(), sizeof(Grid3dCell), grid_info_.size, pf);
 
   fclose(pf);
 
@@ -227,10 +228,10 @@ bool Grid3d::loadGrid(const std::string& grid_path)
 
   //! Read grid general info
   double sensor_dev;
-  fread(&grid_size_, sizeof(uint32_t), 1, pf);
-  fread(&grid_size_x_, sizeof(uint32_t), 1, pf);
-  fread(&grid_size_y_, sizeof(uint32_t), 1, pf);
-  fread(&grid_size_z_, sizeof(uint32_t), 1, pf);
+  fread(&grid_info_.size, sizeof(uint32_t), 1, pf);
+  fread(&grid_info_.size_x, sizeof(uint32_t), 1, pf);
+  fread(&grid_info_.size_y, sizeof(uint32_t), 1, pf);
+  fread(&grid_info_.size_z, sizeof(uint32_t), 1, pf);
   fread(&sensor_dev, sizeof(double), 1, pf);
 
   if (std::fabs(sensor_dev - sensor_dev_) >= std::numeric_limits<double>::epsilon())
@@ -239,12 +240,12 @@ bool Grid3d::loadGrid(const std::string& grid_path)
     return false;
   }
 
-  grid_step_y_ = grid_size_x_;
-  grid_step_z_ = grid_size_x_ * grid_size_y_;
+  grid_info_.step_y = grid_info_.size_x;
+  grid_info_.step_z = grid_info_.size_x * grid_info_.size_y;
 
   //! Read grid cells
-  grid_.reset(new GridCell[grid_size_]);
-  fread(grid_.get(), sizeof(GridCell), grid_size_, pf);
+  grid_info_.grid.reset(new Grid3dCell[grid_info_.size]);
+  fread(grid_info_.grid.get(), sizeof(Grid3dCell), grid_info_.size, pf);
 
   fclose(pf);
 
@@ -253,61 +254,11 @@ bool Grid3d::loadGrid(const std::string& grid_path)
   return true;
 }
 
-void Grid3d::computeGrid()
-{
-  ROS_INFO("[%s] Computing 3D occupancy grid. This will take some time...", ros::this_node::getName().data());
-
-  //! Alloc the 3D grid
-  grid_size_x_ = static_cast<uint32_t>(max_x_ * one_div_res_);
-  grid_size_y_ = static_cast<uint32_t>(max_y_ * one_div_res_);
-  grid_size_z_ = static_cast<uint32_t>(max_z_ * one_div_res_);
-  grid_size_ = grid_size_x_ * grid_size_y_ * grid_size_z_;
-  grid_step_y_ = grid_size_x_;
-  grid_step_z_ = grid_size_x_ * grid_size_y_;
-
-  grid_.reset(new GridCell[grid_size_]);
-
-  //! Setup kdtree
-  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-  kdtree.setInputCloud(cloud_);
-
-  //! Compute the distance to the closest point of the grid
-  const float gauss_const1 = static_cast<float>(1. / (sensor_dev_ * sqrt(2 * M_PI)));
-  const float gauss_const2 = static_cast<float>(1. / (2. * sensor_dev_ * sensor_dev_));
-  uint32_t index;
-  float dist;
-  pcl::PointXYZ search_point;
-  std::vector<int> point_idx_nkn_search(1);
-  std::vector<float> point_nkn_squared_distance(1);
-  for (uint32_t iz = 0; iz < grid_size_z_; ++iz)
-    for (uint32_t iy = 0; iy < grid_size_y_; ++iy)
-      for (uint32_t ix = 0; ix < grid_size_x_; ++ix)
-      {
-        search_point.x = ix * resolution_;
-        search_point.y = iy * resolution_;
-        search_point.z = iz * resolution_;
-        index = ix + iy * grid_step_y_ + iz * grid_step_z_;
-
-        if (kdtree.nearestKSearch(search_point, 1, point_idx_nkn_search, point_nkn_squared_distance) > 0)
-        {
-          dist = point_nkn_squared_distance[0];
-          grid_[index].dist = dist;
-          grid_[index].prob = gauss_const1 * expf(-dist * dist * gauss_const2);
-        }
-        else
-        {
-          grid_[index].dist = -1.0;
-          grid_[index].prob = 0.0;
-        }
-      }
-
-  ROS_INFO("[%s] Computing 3D occupancy grid done!", ros::this_node::getName().data());
-}
-
 inline uint32_t Grid3d::point2grid(const float x, const float y, const float z) const
 {
-  return static_cast<uint32_t>(x * one_div_res_) + static_cast<uint32_t>(y * one_div_res_) * grid_step_y_ +
-         static_cast<uint32_t>(z * one_div_res_) * grid_step_z_;
+  return static_cast<uint32_t>(x / pc_info_.octo_resol) +
+         static_cast<uint32_t>(y / pc_info_.octo_resol) * grid_info_.step_y +
+         static_cast<uint32_t>(z / pc_info_.octo_resol) * grid_info_.step_z;
 }
 
 }  // namespace amcl3d

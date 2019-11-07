@@ -137,28 +137,53 @@ TEST_F(PointCloudToolsTest, shouldOpenOcTreeFromOtFile)
 
 TEST_F(PointCloudToolsTest, shouldNotComputePointCloudWithNullOctoTree)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
+  PointCloudInfo pc_info;
 
-  ASSERT_THROW(cloud = computePointCloud(nullptr), std::runtime_error);
-  ASSERT_EQ(cloud.get(), nullptr);
+  ASSERT_THROW(pc_info = computePointCloud(nullptr), std::runtime_error);
+
+  ASSERT_EQ(pc_info.cloud, nullptr);
+  ASSERT_DOUBLE_EQ(pc_info.octo_min_x, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_min_y, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_min_z, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_max_x, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_max_y, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_max_z, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_resol, 0);
 }
 
 TEST_F(PointCloudToolsTest, shouldNotComputePointCloudWithEmptyOctoTree)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
+  PointCloudInfo pc_info;
 
   std::shared_ptr<octomap::OcTree> octo_tree(new octomap::OcTree(0.1));
 
-  ASSERT_THROW(cloud = computePointCloud(octo_tree), std::runtime_error);
-  ASSERT_EQ(cloud.get(), nullptr);
+  ASSERT_THROW(pc_info = computePointCloud(octo_tree), std::runtime_error);
+
+  ASSERT_EQ(pc_info.cloud, nullptr);
+  ASSERT_DOUBLE_EQ(pc_info.octo_min_x, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_min_y, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_min_z, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_max_x, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_max_y, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_max_z, 0);
+  ASSERT_DOUBLE_EQ(pc_info.octo_resol, 0);
 }
 
 TEST_F(PointCloudToolsTest, shouldComputePointCloud)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
+  PointCloudInfo pc_info;
 
   openOcTreeFromBtFile();
 
-  ASSERT_NO_THROW(cloud = computePointCloud(_octo_tree));
-  ASSERT_NE(cloud.get(), nullptr);
+  ASSERT_NO_THROW(pc_info = computePointCloud(_octo_tree));
+
+  ASSERT_NE(pc_info.cloud, nullptr);
+  ASSERT_EQ(pc_info.cloud->size(), 179551);
+  ASSERT_DOUBLE_EQ(pc_info.octo_min_x, -17.35);
+  ASSERT_DOUBLE_EQ(pc_info.octo_min_y, -9.5);
+  ASSERT_DOUBLE_EQ(pc_info.octo_min_z, -1.4);
+  ASSERT_DOUBLE_EQ(pc_info.octo_max_x, 8.75);
+  ASSERT_DOUBLE_EQ(pc_info.octo_max_y, 9.7);
+  ASSERT_DOUBLE_EQ(pc_info.octo_max_z, 6.25);
+  ASSERT_DOUBLE_EQ(pc_info.octo_resol, 0.05);
 }

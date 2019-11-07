@@ -41,11 +41,22 @@ find_package(GMock)
 
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
-add_library(${PROJECT_NAME}           src/Grid3d.cpp src/Grid3d.h src/ParticleFilter.cpp src/ParticleFilter.h)
+add_library(${PROJECT_NAME}
+  src/Grid3d.cpp
+  src/Grid3d.h
+  src/ParticleFilter.cpp
+  src/ParticleFilter.h
+  src/PointCloudTools.cpp
+  src/PointCloudTools.h)
 add_dependencies(${PROJECT_NAME}      ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
-add_executable(${PROJECT_NAME}_node         src/main.cpp src/Node.cpp src/Node.h src/Parameters.cpp src/Parameters.h)
+add_executable(${PROJECT_NAME}_node
+  src/main.cpp
+  src/Node.cpp
+  src/Node.h
+  src/Parameters.cpp
+  src/Parameters.h)
 add_dependencies(${PROJECT_NAME}_node       ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_node  ${catkin_LIBRARIES} ${PROJECT_NAME})
 

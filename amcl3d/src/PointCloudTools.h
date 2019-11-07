@@ -19,8 +19,6 @@
 
 #include <memory>
 
-#include <boost/filesystem.hpp>
-
 #include <octomap/OcTree.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -28,65 +26,47 @@
 namespace amcl3d
 {
 
-std::shared_ptr<octomap::OcTree> openOcTree(const std::string& file_path)
+class Grid3dCell
 {
-  if (!boost::filesystem::exists(file_path))
-    throw std::runtime_error(std::string("Cannot find file ") + file_path);
+public:
+  float dist { -1 },
+        prob { 0 };
+};
 
-  std::shared_ptr<octomap::OcTree> octo_tree;
+class Grid3dInfo
+{
+public:
+  std::unique_ptr<Grid3dCell[]> grid;
+  double   max_x  { 0 },
+           max_y  { 0 },
+           max_z  { 0 };
+  uint32_t size   { 0 },
+           size_x { 0 },
+           size_y { 0 },
+           size_z { 0 };
+  uint32_t step_y { 0 },
+           step_z { 0 };
+};
 
-  if (file_path.compare(file_path.length() - 3, 3, ".bt") == 0)
-  {
-    octo_tree.reset(new octomap::OcTree(0.1));
+class PointCloudInfo
+{
+public:
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
+  double octo_min_x { 0 },
+         octo_min_y { 0 },
+         octo_min_z { 0 };
+  double octo_max_x { 0 },
+         octo_max_y { 0 },
+         octo_max_z { 0 };
+  double octo_resol { 0 };
+};
 
-    if (!octo_tree->readBinary(file_path))
-      throw std::runtime_error("OcTree cannot be read");
-  }
-  else if (file_path.compare(file_path.length() - 3, 3, ".ot") == 0)
-  {
-    octo_tree.reset(dynamic_cast<octomap::OcTree*>(octomap::AbstractOcTree::read(file_path)));
-  }
-
-  if (!octo_tree)
-    throw std::runtime_error(std::string("OcTree cannot be created from file ") + file_path);
-
-  return octo_tree;
-}
+std::shared_ptr<octomap::OcTree> openOcTree(const std::string& file_path);
 
 //! Load the octomap in PCL for easy nearest neighborhood computation
 //! The point-cloud is shifted to have (0,0,0) as min values
-pcl::PointCloud<pcl::PointXYZ>::Ptr computePointCloud(std::shared_ptr<octomap::OcTree> octo_tree)
-{
-  if (!octo_tree)
-    throw std::runtime_error("OcTree is NULL");
+PointCloudInfo computePointCloud(std::shared_ptr<octomap::OcTree> octo_tree);
 
-  const uint32_t octo_size = octo_tree->size();
-  if (octo_size <= 1)
-    throw std::runtime_error("OcTree is empty");
-
-  double octo_min_x, octo_min_y, octo_min_z;
-  octo_tree->getMetricMin(octo_min_x, octo_min_y, octo_min_z);
-
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
-  cloud->width  = octo_size;
-  cloud->height = 1;
-  cloud->points.resize(cloud->width * cloud->height);
-
-  uint32_t i = 0;
-  for (octomap::OcTree::leaf_iterator it = octo_tree->begin_leafs(); it != octo_tree->end_leafs(); ++it)
-  {
-    if (it != nullptr && octo_tree->isNodeOccupied(*it))
-    {
-      cloud->points[i].x = static_cast<float>(it.getX()) - octo_min_x;
-      cloud->points[i].y = static_cast<float>(it.getY()) - octo_min_y;
-      cloud->points[i].z = static_cast<float>(it.getZ()) - octo_min_z;
-      ++i;
-    }
-  }
-  cloud->width = i;
-  cloud->points.resize(i);
-
-  return cloud;
-}
+Grid3dInfo computeGrid(const PointCloudInfo &pc_info, const double sensor_dev);
 
 }  // namespace amcl3d

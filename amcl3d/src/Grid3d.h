@@ -25,6 +25,8 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <tf/tf.h>
 
+#include "PointCloudTools.h"
+
 namespace amcl3d
 {
 class Grid3d
@@ -47,32 +49,17 @@ public:
 private:
   bool saveGrid(const std::string& grid_path);
   bool loadGrid(const std::string& grid_path);
-  void computeGrid();
 
   inline uint32_t point2grid(const float x, const float y, const float z) const;
 
   //! Init parameter
   double sensor_dev_;
 
-  //! Octomap parameters
-  float max_x_, max_y_, max_z_;
-  float min_oct_x_, min_oct_y_, min_oct_z_;
-  float resolution_, one_div_res_;
-
   //! 3D point cloud representation of the map
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_;
+  PointCloudInfo pc_info_;
 
   //! 3D probabilistic grid cell
-  struct GridCell
-  {
-    float dist, prob;
-    GridCell() : dist(-1.f), prob(0.f)
-    {
-    }
-  };
-  std::unique_ptr<GridCell[]> grid_;
-  uint32_t grid_size_, grid_size_x_, grid_size_y_, grid_size_z_;
-  uint32_t grid_step_y_, grid_step_z_;
+  Grid3dInfo grid_info_;
 };
 
 }  // namespace amcl3d
