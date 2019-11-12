@@ -23,12 +23,10 @@
 
 namespace amcl3d
 {
-
 class Grid3dCell
 {
 public:
-  float dist { -1 },
-        prob { 0 };
+  float dist{ -1 }, prob{ 0 };
 };
 
 class Grid3dInfo
@@ -39,12 +37,9 @@ public:
   typedef boost::shared_ptr<const Grid3dInfo> ConstPtr;
 
   std::vector<Grid3dCell> grid;
-  double sensor_dev { 0 };
-  uint32_t size_x   { 0 },
-           size_y   { 0 },
-           size_z   { 0 };
-  uint32_t step_y   { 0 },
-           step_z   { 0 };
+  double sensor_dev{ 0 };
+  uint32_t size_x{ 0 }, size_y{ 0 }, size_z{ 0 };
+  uint32_t step_y{ 0 }, step_z{ 0 };
 };
 
 class PointCloudInfo
@@ -55,13 +50,9 @@ public:
   typedef boost::shared_ptr<const PointCloudInfo> ConstPtr;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
-  double octo_min_x { 0 },
-         octo_min_y { 0 },
-         octo_min_z { 0 };
-  double octo_max_x { 0 },
-         octo_max_y { 0 },
-         octo_max_z { 0 };
-  double octo_resol { 0 };
+  double octo_min_x{ 0 }, octo_min_y{ 0 }, octo_min_z{ 0 };
+  double octo_max_x{ 0 }, octo_max_y{ 0 }, octo_max_z{ 0 };
+  double octo_resol{ 0 };
 };
 
 boost::shared_ptr<octomap::OcTree> openOcTree(const std::string& file_path);

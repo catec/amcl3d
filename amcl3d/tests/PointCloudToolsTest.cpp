@@ -21,8 +21,8 @@
 
 using namespace amcl3d;
 
-static const std::string DATA_DIR =
-  std::string(PROJECT_SOURCE_DIR) + std::string("/data");
+static const std::string DATA_DIR = std::string(PROJECT_SOURCE_DIR) + std::string("/data");
+static const std::string TESTSDATA_DIR = std::string(PROJECT_SOURCE_DIR) + std::string("/tests/data");
 
 class PointCloudToolsTest : public ::testing::Test
 {
@@ -58,7 +58,6 @@ protected:
   boost::shared_ptr<octomap::OcTree> _octo_tree;
 };
 
-
 TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromNonExistentFile)
 {
   boost::shared_ptr<octomap::OcTree> octo_tree;
@@ -77,7 +76,7 @@ TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromWrongBtFile)
 {
   boost::shared_ptr<octomap::OcTree> octo_tree;
 
-  const std::string file_path = DATA_DIR + "/map/mapfile_wrong.bt";
+  const std::string file_path = TESTSDATA_DIR + "/mapfile_wrong.bt";
 
   ASSERT_THROW(octo_tree = openOcTree(file_path), std::runtime_error);
   ASSERT_EQ(octo_tree.get(), nullptr);
@@ -87,7 +86,7 @@ TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromWrongOtFile)
 {
   boost::shared_ptr<octomap::OcTree> octo_tree;
 
-  const std::string file_path = DATA_DIR + "/map/mapfile_wrong.ot";
+  const std::string file_path = TESTSDATA_DIR + "/mapfile_wrong.ot";
 
   ASSERT_THROW(octo_tree = openOcTree(file_path), std::runtime_error);
   ASSERT_EQ(octo_tree.get(), nullptr);
@@ -97,7 +96,7 @@ TEST_F(PointCloudToolsTest, shouldNotOpenOcTreeFromUnknownExtension)
 {
   boost::shared_ptr<octomap::OcTree> octo_tree;
 
-  const std::string file_path = DATA_DIR + "/map/mapfile_unknown_extension.unk";
+  const std::string file_path = TESTSDATA_DIR + "/mapfile_unknown_extension.unk";
 
   ASSERT_THROW(octo_tree = openOcTree(file_path), std::runtime_error);
   ASSERT_EQ(octo_tree.get(), nullptr);
@@ -133,7 +132,6 @@ TEST_F(PointCloudToolsTest, shouldOpenOcTreeFromOtFile)
   double resolution = octo_tree->getResolution();
   ASSERT_DOUBLE_EQ(resolution, 0.05);
 }
-
 
 TEST_F(PointCloudToolsTest, shouldNotComputePointCloudWithNullOctoTree)
 {

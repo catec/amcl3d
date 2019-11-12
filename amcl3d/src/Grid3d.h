@@ -32,16 +32,20 @@ namespace amcl3d
 class Grid3d
 {
 public:
-  explicit Grid3d() {}
-  virtual ~Grid3d() {}
+  explicit Grid3d()
+  {
+  }
+  virtual ~Grid3d()
+  {
+  }
 
   bool open(const std::string& map_path, const double sensor_dev);
 
   bool buildGridSliceMsg(const double z, nav_msgs::OccupancyGrid& msg) const;
   bool buildMapPointCloudMsg(sensor_msgs::PointCloud2& msg) const;
 
-  float computeCloudWeight(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
-                           const float tx, const float ty, const float tz, const float a) const;
+  float computeCloudWeight(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const float tx, const float ty,
+                           const float tz, const float a) const;
   bool isIntoMap(const float x, const float y, const float z) const;
 
 private:

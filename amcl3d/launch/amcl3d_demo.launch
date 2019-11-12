@@ -10,6 +10,6 @@
   <node pkg="tf" type="static_transform_publisher" name="tf_sensorconnected" args="0 0 0.05 3.1416 0 0 /base_link /lidar_points 100"/>
 
   <!-- To charge the rosbag -->
-  <node pkg="rosbag" type="play" name="rosbag_p" args="--clock $(find amcl3d)/data/rosbag/RosbagRosin.bag"/>
+  <node pkg="rosbag" type="play" name="rosbag_p" args="--clock -r 0.5 $(find amcl3d)/data/rosbag/RosbagRosin.bag"/>
 
 </launch>

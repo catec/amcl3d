@@ -207,9 +207,9 @@ Parameters::Parameters()
            "\n      alpha=%lf",
            ros::this_node::getName().data(), base_frame_id_.c_str(), odom_frame_id_.c_str(), global_frame_id_.c_str(),
            map_path_.c_str(), (int)set_initial_pose_, init_x_, init_y_, init_z_, init_a_, init_x_dev_, init_y_dev_,
-           init_z_dev_, init_a_dev_, publish_point_cloud_rate_, grid_slice_z_, publish_grid_slice_rate_,
-           sensor_dev_, sensor_range_, voxel_size_, num_particles_, odom_x_mod_, odom_y_mod_,
-           odom_z_mod_, odom_a_mod_, resample_interval_, update_rate_, d_th_, a_th_, take_off_height_, alpha_);
+           init_z_dev_, init_a_dev_, publish_point_cloud_rate_, grid_slice_z_, publish_grid_slice_rate_, sensor_dev_,
+           sensor_range_, voxel_size_, num_particles_, odom_x_mod_, odom_y_mod_, odom_z_mod_, odom_a_mod_,
+           resample_interval_, update_rate_, d_th_, a_th_, take_off_height_, alpha_);
 }
 
 void Parameters::exitWithParameterError(const char* parameter_str)

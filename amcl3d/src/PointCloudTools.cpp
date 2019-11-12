@@ -23,7 +23,6 @@
 
 namespace amcl3d
 {
-
 boost::shared_ptr<octomap::OcTree> openOcTree(const std::string& file_path)
 {
   if (!boost::filesystem::exists(file_path))
@@ -137,7 +136,7 @@ Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev
         else
         {
           grid_info->grid[index].dist = -1.0;
-          grid_info->grid[index].prob =  0.0;
+          grid_info->grid[index].prob = 0.0;
         }
       }
     }

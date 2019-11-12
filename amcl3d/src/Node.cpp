@@ -41,7 +41,8 @@ void Node::spin()
   if (!grid3d_.open(parameters_.map_path_, parameters_.sensor_dev_))
     return;
 
-  if (parameters_.publish_grid_slice_rate_ != 0 && grid3d_.buildGridSliceMsg(parameters_.grid_slice_z_, grid_slice_msg_))
+  if (parameters_.publish_grid_slice_rate_ != 0 &&
+      grid3d_.buildGridSliceMsg(parameters_.grid_slice_z_, grid_slice_msg_))
   {
     grid_slice_msg_.header.frame_id = parameters_.global_frame_id_;
     grid_slice_pub_ = nh_.advertise<nav_msgs::OccupancyGrid>("grid_slice", 1, true);
@@ -331,8 +332,7 @@ void Node::rangeCallback(const rosinrange_msg::RangePoseConstPtr& msg)
   anchor.y = msg->position.y;
   anchor.z = msg->position.z;
 
-  range_data.push_back(Range(static_cast<float>(msg->range),
-                             msg->position.x, msg->position.y, msg->position.z));
+  range_data.push_back(Range(static_cast<float>(msg->range), msg->position.x, msg->position.y, msg->position.z));
 
   geometry_msgs::Point uav;
   uav.x = mean_p_.x;

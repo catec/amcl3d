@@ -49,7 +49,7 @@ TEST_F(Grid3dTest, buildGridSliceMsgTest)
   std::string map_path = source + "/data/map/mapfile_complete.bt";
 
   nav_msgs::OccupancyGrid msg;
-  float z_negative = -1;
+  float z_negative = -100;
   float z_positive = 0;
 
   // Deserialize msg
@@ -129,10 +129,10 @@ TEST_F(Grid3dTest, computeCloudWeightTest)
   float ty = 10.140815;
   float tz = 3.372801;
   float a = 0.166781;
-  float wp_real = 4.32189;
+  float wp_real = 2.7892310619354248;
 
   // Deserialize msg
-  std::ifstream ifs(source + "/tests/data/points_grid.bin", std::ios::in | std::ios::binary);
+  std::ifstream ifs(source + "/tests/data/grid_info.bin", std::ios::in | std::ios::binary);
   ifs.seekg(0, std::ios::end);
   std::streampos end = ifs.tellg();
   ifs.seekg(0, std::ios::beg);
@@ -145,8 +145,7 @@ TEST_F(Grid3dTest, computeCloudWeightTest)
   ros::serialization::deserialize(istream, msg);
   ifs.close();
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr points_grid(
-    new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::PointCloud<pcl::PointXYZ>::Ptr points_grid(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::PointXYZ point_grid;
   for (int i = 0; i < msg.poses.size(); i++)
   {
@@ -188,7 +187,7 @@ TEST_F(Grid3dTest, computeCloudWeightParticlesTest)
   std::vector<float> wp_vector;
 
   // Deserialize the points
-  std::ifstream ifs(source + "/tests/data/points_grid.bin", std::ios::in | std::ios::binary);
+  std::ifstream ifs(source + "/tests/data/grid_info.bin", std::ios::in | std::ios::binary);
   ifs.seekg(0, std::ios::end);
   std::streampos end = ifs.tellg();
   ifs.seekg(0, std::ios::beg);
@@ -201,8 +200,7 @@ TEST_F(Grid3dTest, computeCloudWeightParticlesTest)
   ros::serialization::deserialize(istream, msg);
   ifs.close();
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr points_grid(
-    new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::PointCloud<pcl::PointXYZ>::Ptr points_grid(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::PointXYZ point_grid;
   for (int i = 0; i < msg.poses.size(); i++)
   {
@@ -250,9 +248,9 @@ TEST_F(Grid3dTest, isIntoMapTest)
   float x_into = 1;
   float y_into = 1;
   float z_into = 1;
-  float x_ninto = -1;
-  float y_ninto = -1;
-  float z_ninto = -1;
+  float x_ninto = -100;
+  float y_ninto = -100;
+  float z_ninto = -100;
 
   std::string source = PROJECT_SOURCE_DIR;
   std::string map_path = source + "/data/map/mapfile_complete.bt";
