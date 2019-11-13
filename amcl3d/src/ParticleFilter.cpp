@@ -194,30 +194,71 @@ void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::Poi
   mean_ = mean_p;
 }
 
-void ParticleFilter::resample()
+void ParticleFilter::resample(const int num_particles, const float x_dev, const float y_dev, const float z_dev,
+                              const float a_dev)
 {
-  std::vector<Particle> new_p(p_.size());
   const float factor = 1.f / p_.size();
   const float r = factor * rngUniform(0, 1);
   float c = p_[0].w;
+  uint32_t index = 0;
   float u;
 
   //! Do resamplig
-  for (uint32_t m = 0, i = 0; m < p_.size(); ++m)
+  std::vector<Particle> new_particles;
+  Particle new_particle;
+  Particle temporal_mean;
+
+  for (uint32_t m = 0; m < p_.size(); ++m)
   {
     u = r + factor * m;
+
     while (u > c)
     {
-      if (++i >= p_.size())
+      if (++index >= p_.size())
         break;
-      c += p_[i].w;
+      c += p_[index].w;
     }
-    new_p[m] = p_[i];
-    new_p[m].w = factor;
+
+    new_particle = p_[index];
+    new_particle.w = 1;
+    temporal_mean.x += new_particle.x;
+    temporal_mean.y += new_particle.y;
+    temporal_mean.z += new_particle.z;
+    temporal_mean.a += new_particle.a;
+    new_particles.push_back(new_particle);
+  }
+
+  temporal_mean.x /= new_particles.size();
+  temporal_mean.y /= new_particles.size();
+  temporal_mean.z /= new_particles.size();
+  temporal_mean.a /= new_particles.size();
+
+  while (new_particles.size() < num_particles)
+  {
+    new_particle.x = temporal_mean.x + ranGaussian(0, x_dev);
+    new_particle.y = temporal_mean.y + ranGaussian(0, y_dev);
+    new_particle.z = temporal_mean.z + ranGaussian(0, z_dev);
+    new_particle.a = temporal_mean.a + ranGaussian(0, a_dev);
+    new_particle.w = 1;
+    new_particles.push_back(new_particle);
   }
 
   //! Asign the new particles set
-  p_ = new_p;
+  p_ = new_particles;
+
+  //! Normalize all weights and update the mean
+  Particle mean_p;
+
+  for (uint32_t i = 0; i < p_.size(); ++i)
+  {
+    p_[i].w /= p_.size();
+    mean_p.x += p_[i].w * p_[i].x;
+    mean_p.y += p_[i].w * p_[i].y;
+    mean_p.z += p_[i].w * p_[i].z;
+    mean_p.a += p_[i].w * p_[i].a;
+  }
+
+  mean_ = mean_p;
 }
 
 float ParticleFilter::computeRangeWeight(const float x, const float y, const float z,

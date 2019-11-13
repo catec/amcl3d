@@ -90,7 +90,7 @@ public:
               const std::vector<Range>& range_data, const double alpha, const double sigma);
 
   //! Resample the set of particles using low-variance sampling
-  void resample();
+  void resample(const int num_particles, const float x_dev, const float y_dev, const float z_dev, const float a_dev);
 
 private:
   float computeRangeWeight(const float x, const float y, const float z, const std::vector<Range>& range_data,
