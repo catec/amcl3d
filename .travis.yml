@@ -33,7 +33,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install python-catkin-pkg python-catkin-tools python-rosdep python-wstool ros-$ROS_DISTRO-catkin
   - sudo apt-get install -y python-rosinstall python-rosinstall-generator build-essential
-  - sudo apt-get python-pip python-dev
+  - sudo apt-get install python-pip python-dev
   - sudo apt-get install -y ros-$ROS_DISTRO-octomap-msgs
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
