@@ -30,8 +30,10 @@ before_install:
   - sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
   - sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
   - sudo apt-get update -qq
+  - sudo apt-get update
   - sudo apt-get install python-catkin-pkg python-catkin-tools python-rosdep python-wstool ros-$ROS_DISTRO-catkin
   - sudo apt-get install -y python-rosinstall python-rosinstall-generator build-essential
+  - sudo apt-get python-pip python-dev
   - sudo apt-get install -y ros-$ROS_DISTRO-octomap-msgs
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
@@ -53,7 +55,6 @@ install:
   # Add the package under integration to the workspace using a symlink.
   - cd ~/catkin_ws/src
   - ln -s $CI_SOURCE_PATH .
-  - pip install --upgrade pip --user
   - pip install codecov --user
   - pip install pytest-cov pytest --user
 
