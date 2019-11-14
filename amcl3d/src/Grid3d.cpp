@@ -65,7 +65,15 @@ bool Grid3d::open(const std::string& map_path, const double sensor_dev)
   ROS_INFO("[%s] Computing 3D occupancy grid done!", ros::this_node::getName().data());
 
   //! Save grid on file
-  saveGrid(grid_path);
+  try
+  {
+    saveGrid(grid_info_, grid_path);
+  }
+  catch (std::exception& e)
+  {
+    ROS_ERROR("[%s] %s", ros::this_node::getName().data(), e.what());
+    return false;
+  }
 
   return true;
 }
@@ -176,35 +184,6 @@ bool Grid3d::isIntoMap(const float x, const float y, const float z) const
 
   return !pc_info_ || (x >= pc_info_->octo_min_x && x < pc_info_->octo_max_x && y >= pc_info_->octo_min_y &&
                        y < pc_info_->octo_max_y && z >= pc_info_->octo_min_z && z < pc_info_->octo_max_z);
-}
-
-bool Grid3d::saveGrid(const std::string& grid_path)
-{
-  if (!grid_info_)
-    return false;
-
-  auto pf = fopen(grid_path.c_str(), "wb");
-  if (!pf)
-  {
-    ROS_ERROR("[%s] Error opening file %s for writing", ros::this_node::getName().data(), grid_path.c_str());
-    return false;
-  }
-
-  //! Write grid general info
-  fwrite(&grid_info_->size_x, sizeof(uint32_t), 1, pf);
-  fwrite(&grid_info_->size_y, sizeof(uint32_t), 1, pf);
-  fwrite(&grid_info_->size_z, sizeof(uint32_t), 1, pf);
-  fwrite(&grid_info_->sensor_dev, sizeof(double), 1, pf);
-
-  //! Write grid cells
-  const auto grid_size = grid_info_->size_x * grid_info_->size_y * grid_info_->size_z;
-  fwrite(grid_info_->grid.data(), sizeof(Grid3dCell), grid_size, pf);
-
-  fclose(pf);
-
-  ROS_INFO("[%s] Grid map successfully saved on %s", ros::this_node::getName().data(), grid_path.c_str());
-
-  return true;
 }
 
 bool Grid3d::loadGrid(const std::string& grid_path, const double sensor_dev)

@@ -49,7 +49,6 @@ public:
   bool isIntoMap(const float x, const float y, const float z) const;
 
 private:
-  bool saveGrid(const std::string& grid_path);
   bool loadGrid(const std::string& grid_path, const double sensor_dev);
 
   inline uint32_t point2grid(const float x, const float y, const float z) const;

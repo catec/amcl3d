@@ -15,9 +15,13 @@
  * limitations under the License.
  */
 
+#include <boost/filesystem.hpp>
+
 #include <PointCloudTools.h>
 
 #include "common_tests.h"
+
+static const std::string TEST_DIR = std::string("/tmp/JsonMissionFileTest");
 
 using namespace amcl3d;
 
@@ -50,6 +54,16 @@ protected:
     ASSERT_DOUBLE_EQ(0.05, resolution);
 
     _octo_tree = octo_tree;
+  }
+
+  virtual void SetUp()
+  {
+    boost::filesystem::create_directory(TEST_DIR);
+  }
+
+  virtual void TearDown()
+  {
+     boost::filesystem::remove_all(TEST_DIR);
   }
 
   boost::shared_ptr<octomap::OcTree> _octo_tree;
@@ -440,4 +454,89 @@ TEST_F(PointCloudToolsTest, shouldComputeGrid)
       ASSERT_FLOAT_EQ(expected_prob, grid_info->grid[index].prob);
     }
   }
+}
+
+/** saveGrid method tests **/
+
+TEST_F(PointCloudToolsTest, shouldNotSaveGridWithNullGrid3dInfo)
+{
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  const std::string expected_what("Grid3dInfo is NULL");
+
+  ASSERT_THROW_WHAT(saveGrid(grid_info, file_path),
+                    std::runtime_error, expected_what);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotSaveGridWithEmptyGrid3dInfo)
+{
+  Grid3dInfo::Ptr grid_info(new Grid3dInfo());
+
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  const std::string expected_what("Grid3dInfo is empty");
+
+  ASSERT_THROW_WHAT(saveGrid(grid_info, file_path),
+                    std::runtime_error, expected_what);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotSaveGridWithInvalidGrid3d)
+{
+  Grid3dInfo::Ptr grid_info(new Grid3dInfo());
+  grid_info->grid.resize(1);
+
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  const std::string expected_what("Grid3dInfo is invalid");
+
+  ASSERT_THROW_WHAT(saveGrid(grid_info, file_path),
+                    std::runtime_error, expected_what);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotSaveGridWithEmptyFilePath)
+{
+  Grid3dInfo::Ptr grid_info(new Grid3dInfo());
+  grid_info->size_x = 1;
+  grid_info->size_y = 1;
+  grid_info->size_z = 1;
+  grid_info->grid.resize(1);
+
+  const std::string file_path = "";
+
+  const std::string expected_what = std::string("Cannot be created file ") + file_path;
+
+  ASSERT_THROW_WHAT(saveGrid(grid_info, file_path),
+                    std::runtime_error, expected_what);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotSaveGridWithNonExistentFilePath)
+{
+  Grid3dInfo::Ptr grid_info(new Grid3dInfo());
+  grid_info->size_x = 1;
+  grid_info->size_y = 1;
+  grid_info->size_z = 1;
+  grid_info->grid.resize(1);
+
+  const std::string file_path("/tmp/UnknownFolder/test_file.grid");
+
+  const std::string expected_what = std::string("Cannot be created file ") + file_path;
+
+  ASSERT_THROW_WHAT(saveGrid(grid_info, file_path),
+                    std::runtime_error, expected_what);
+}
+
+TEST_F(PointCloudToolsTest, shouldSaveGrid)
+{
+  Grid3dInfo::Ptr grid_info(new Grid3dInfo());
+  grid_info->sensor_dev = DEFAULT_SENSOR_DEV;
+  grid_info->size_x = 10;
+  grid_info->size_y = 10;
+  grid_info->size_z = 10;
+  grid_info->grid.resize(1000);
+
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  ASSERT_NO_THROW(saveGrid(grid_info, file_path));
 }

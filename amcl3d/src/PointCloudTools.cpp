@@ -158,4 +158,32 @@ Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev
   return grid_info;
 }
 
+void saveGrid(Grid3dInfo::Ptr grid_info, const std::string& file_path)
+{
+  if (!grid_info)
+    throw std::runtime_error("Grid3dInfo is NULL");
+
+  if (grid_info->grid.size() <= 0)
+    throw std::runtime_error("Grid3dInfo is empty");
+
+  const auto expected_grid_size = grid_info->size_x * grid_info->size_y * grid_info->size_z;
+  if (grid_info->grid.size() != expected_grid_size)
+    throw std::runtime_error("Grid3dInfo is invalid");
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  if (!pf)
+    throw std::runtime_error(std::string("Cannot be created file ") + file_path);
+
+  //! Write grid general info
+  fwrite(&grid_info->size_x, sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info->size_y, sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info->size_z, sizeof(uint32_t), 1, pf);
+  fwrite(&grid_info->sensor_dev, sizeof(double), 1, pf);
+
+  //! Write grid cells
+  fwrite(grid_info->grid.data(), sizeof(Grid3dCell), grid_info->grid.size(), pf);
+
+  fclose(pf);
+}
+
 }  // namespace amcl3d

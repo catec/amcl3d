@@ -63,4 +63,6 @@ PointCloudInfo::Ptr computePointCloud(boost::shared_ptr<octomap::OcTree> octo_tr
 
 Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev);
 
+void saveGrid(Grid3dInfo::Ptr grid_info, const std::string& file_path);
+
 }  // namespace amcl3d
