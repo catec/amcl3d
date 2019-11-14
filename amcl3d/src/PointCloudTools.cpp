@@ -186,4 +186,52 @@ void saveGrid(Grid3dInfo::Ptr grid_info, const std::string& file_path)
   fclose(pf);
 }
 
+Grid3dInfo::Ptr loadGrid(const std::string& file_path, const double sensor_dev)
+{
+  if (sensor_dev <= 0)
+    throw std::runtime_error("SensorDev is not greater than zero");
+
+  auto pf = fopen(file_path.c_str(), "rb");
+  if (!pf)
+    throw std::runtime_error(std::string("Cannot be read file ") + file_path);
+
+  Grid3dInfo::Ptr grid_info(new Grid3dInfo());
+
+  //! Read grid general info
+  if (fread(&grid_info->size_x, sizeof(uint32_t), 1, pf) != 1)
+    throw std::runtime_error("Cannot be read the value of size_x from file");
+  if (grid_info->size_x <= 0)
+    throw std::runtime_error("The value of size_x read is not greater than zero");
+
+  if (fread(&grid_info->size_y, sizeof(uint32_t), 1, pf) != 1)
+    throw std::runtime_error("Cannot be read the value of size_y from file");
+  if (grid_info->size_y <= 0)
+    throw std::runtime_error("The value of size_y read is not greater than zero");
+
+  if (fread(&grid_info->size_z, sizeof(uint32_t), 1, pf) != 1)
+    throw std::runtime_error("Cannot be read the value of size_z from file");
+  if (grid_info->size_z <= 0)
+    throw std::runtime_error("The value of size_z read is not greater than zero");
+
+  if (fread(&grid_info->sensor_dev, sizeof(double), 1, pf) != 1)
+    throw std::runtime_error("Cannot be read the value of sensor_dev from file");
+  if (grid_info->sensor_dev <= 0)
+    throw std::runtime_error("The value of sensor_dev read is not greater than zero");
+  if (std::fabs(grid_info->sensor_dev - sensor_dev) >= std::numeric_limits<double>::epsilon())
+    throw std::runtime_error("The value of sensor_dev read is different than expected");
+
+  grid_info->step_y = grid_info->size_x;
+  grid_info->step_z = grid_info->size_x * grid_info->size_y;
+
+  //! Read grid cells
+  const auto grid_size = grid_info->size_x * grid_info->size_y * grid_info->size_z;
+  grid_info->grid.resize(grid_size);
+  if (fread(grid_info->grid.data(), sizeof(Grid3dCell), grid_size, pf) != grid_size)
+    throw std::runtime_error("Cannot be read all data of grid from file");
+
+  fclose(pf);
+
+  return grid_info;
+}
+
 }  // namespace amcl3d

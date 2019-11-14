@@ -49,15 +49,23 @@ bool Grid3d::open(const std::string& map_path, const double sensor_dev)
     return false;
   }
 
-  //! Try to load the associated grid-map from file
   std::string grid_path;
   if (map_path.compare(map_path.length() - 3, 3, ".bt") == 0)
     grid_path = map_path.substr(0, map_path.find(".bt")) + ".grid";
   if (map_path.compare(map_path.length() - 3, 3, ".ot") == 0)
     grid_path = map_path.substr(0, map_path.find(".ot")) + ".grid";
 
-  if (loadGrid(grid_path, sensor_dev))
+  //! Try to load the associated grid-map from file
+  try
+  {
+    grid_info_ = loadGrid(grid_path, sensor_dev);
+    ROS_INFO("[%s] Grid map successfully loaded from %s", ros::this_node::getName().data(), grid_path.c_str());
     return true;
+  }
+  catch (std::exception& e)
+  {
+    ROS_WARN("[%s] %s", ros::this_node::getName().data(), e.what());
+  }
 
   //! Compute the gridMap using kdtree search over the point-cloud
   ROS_INFO("[%s] Computing 3D occupancy grid. This will take some time...", ros::this_node::getName().data());
@@ -184,44 +192,6 @@ bool Grid3d::isIntoMap(const float x, const float y, const float z) const
 
   return !pc_info_ || (x >= pc_info_->octo_min_x && x < pc_info_->octo_max_x && y >= pc_info_->octo_min_y &&
                        y < pc_info_->octo_max_y && z >= pc_info_->octo_min_z && z < pc_info_->octo_max_z);
-}
-
-bool Grid3d::loadGrid(const std::string& grid_path, const double sensor_dev)
-{
-  auto pf = fopen(grid_path.c_str(), "rb");
-  if (!pf)
-  {
-    ROS_ERROR("[%s] Error opening file %s for reading", ros::this_node::getName().data(), grid_path.c_str());
-    return false;
-  }
-
-  grid_info_.reset(new Grid3dInfo());
-
-  //! Read grid general info
-  fread(&grid_info_->size_x, sizeof(uint32_t), 1, pf);
-  fread(&grid_info_->size_y, sizeof(uint32_t), 1, pf);
-  fread(&grid_info_->size_z, sizeof(uint32_t), 1, pf);
-  fread(&grid_info_->sensor_dev, sizeof(double), 1, pf);
-
-  if (std::fabs(grid_info_->sensor_dev - sensor_dev) >= std::numeric_limits<double>::epsilon())
-  {
-    ROS_ERROR("[%s] Loaded sensorDev is different", ros::this_node::getName().data());
-    return false;
-  }
-
-  grid_info_->step_y = grid_info_->size_x;
-  grid_info_->step_z = grid_info_->size_x * grid_info_->size_y;
-
-  //! Read grid cells
-  const auto grid_size = grid_info_->size_x * grid_info_->size_y * grid_info_->size_z;
-  grid_info_->grid.resize(grid_size);
-  fread(grid_info_->grid.data(), sizeof(Grid3dCell), grid_size, pf);
-
-  fclose(pf);
-
-  ROS_INFO("[%s] Grid map successfully loaded from %s", ros::this_node::getName().data(), grid_path.c_str());
-
-  return true;
 }
 
 inline uint32_t Grid3d::point2grid(const float x, const float y, const float z) const

@@ -49,8 +49,6 @@ public:
   bool isIntoMap(const float x, const float y, const float z) const;
 
 private:
-  bool loadGrid(const std::string& grid_path, const double sensor_dev);
-
   inline uint32_t point2grid(const float x, const float y, const float z) const;
 
   //! 3D point cloud representation of the map

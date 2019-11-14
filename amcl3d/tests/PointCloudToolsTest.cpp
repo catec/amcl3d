@@ -540,3 +540,328 @@ TEST_F(PointCloudToolsTest, shouldSaveGrid)
 
   ASSERT_NO_THROW(saveGrid(grid_info, file_path));
 }
+
+/** loadGrid method tests **/
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithSensorDevLessOrEqualThanZero)
+{
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string file_path = "";
+
+  const std::string expected_what("SensorDev is not greater than zero");
+
+  for (int value = -10; value <= 0; ++value)
+  {
+    ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, value),
+                      std::runtime_error, expected_what);
+    ASSERT_EQ(nullptr, grid_info);
+  }
+
+  ASSERT_THROW_NO_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                       std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithEmptyFilePath)
+{
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string file_path = "";
+
+  const std::string expected_what = std::string("Cannot be read file ") + file_path;
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithNonExistentFilePath)
+{
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string file_path("/tmp/UnknownFolder/test_file.grid");
+
+  const std::string expected_what = std::string("Cannot be read file ") + file_path;
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithUnwrittenSizeX)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("Cannot be read the value of size_x from file");
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithWrongSizeX)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  uint32_t size_value = 0;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("The value of size_x read is not greater than zero");
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithUnwrittenSizeY)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  uint32_t size_value = 1;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("Cannot be read the value of size_y from file");
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithWrongSizeY)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  uint32_t size_value = 1;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  size_value = 0;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("The value of size_y read is not greater than zero");
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithUnwrittenSizeZ)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  uint32_t size_value = 1;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("Cannot be read the value of size_z from file");
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithWrongSizeZ)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  uint32_t size_value = 1;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  size_value = 0;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("The value of size_z read is not greater than zero");
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithUnwrittenSensorDev)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  uint32_t size_value = 1;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("Cannot be read the value of sensor_dev from file");
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithWrongSensorDev)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  for (int value = -10; value <= 0; ++value)
+  {
+    auto pf = fopen(file_path.c_str(), "wb");
+    ASSERT_NE(nullptr, pf);
+    uint32_t size_value = 1;
+    ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+    ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+    ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+    double sensor_dev_value = value;
+    ASSERT_EQ(1, fwrite(&sensor_dev_value, sizeof(double), 1, pf));
+    fclose(pf);
+
+    Grid3dInfo::Ptr grid_info;
+
+    const std::string expected_what("The value of sensor_dev read is not greater than zero");
+
+    ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                      std::runtime_error, expected_what);
+    ASSERT_EQ(nullptr, grid_info);
+
+    boost::filesystem::remove(file_path);
+  }
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  uint32_t size_value = 1;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  double sensor_dev_value = DEFAULT_SENSOR_DEV + 1;
+  ASSERT_EQ(1, fwrite(&sensor_dev_value, sizeof(double), 1, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("The value of sensor_dev read is not greater than zero");
+
+  ASSERT_THROW_NO_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                       std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithDifferentSensorDev)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  uint32_t size_value = 1;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  double sensor_dev_value = DEFAULT_SENSOR_DEV + 1;
+  ASSERT_EQ(1, fwrite(&sensor_dev_value, sizeof(double), 1, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("The value of sensor_dev read is different than expected");
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldNotLoadGridWithUnwrittenData)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  uint32_t size_value = 1;
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&size_value, sizeof(uint32_t), 1, pf));
+  double sensor_dev_value = DEFAULT_SENSOR_DEV;
+  ASSERT_EQ(1, fwrite(&sensor_dev_value, sizeof(double), 1, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  const std::string expected_what("Cannot be read all data of grid from file");
+
+  ASSERT_THROW_WHAT(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV),
+                    std::runtime_error, expected_what);
+  ASSERT_EQ(nullptr, grid_info);
+}
+
+TEST_F(PointCloudToolsTest, shouldLoadGrid)
+{
+  const std::string file_path = TEST_DIR + "/test_file.grid";
+
+  Grid3dInfo::Ptr expected_grid_info(new Grid3dInfo());
+  expected_grid_info->sensor_dev = DEFAULT_SENSOR_DEV;
+  expected_grid_info->size_x = 10;
+  expected_grid_info->size_y = 10;
+  expected_grid_info->size_z = 10;
+  expected_grid_info->step_y = 10;
+  expected_grid_info->step_z = 100;
+  const int grid_size = 1000;
+  expected_grid_info->grid.resize(grid_size);
+  for(int i = 0; i < grid_size; ++i)
+  {
+    expected_grid_info->grid[i].dist = i;
+    expected_grid_info->grid[i].prob = i + 10;
+  }
+
+  auto pf = fopen(file_path.c_str(), "wb");
+  ASSERT_NE(nullptr, pf);
+  ASSERT_EQ(1, fwrite(&expected_grid_info->size_x, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&expected_grid_info->size_y, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&expected_grid_info->size_z, sizeof(uint32_t), 1, pf));
+  ASSERT_EQ(1, fwrite(&expected_grid_info->sensor_dev, sizeof(double), 1, pf));
+  ASSERT_EQ(grid_size, fwrite(expected_grid_info->grid.data(), sizeof(Grid3dCell), grid_size, pf));
+  fclose(pf);
+
+  Grid3dInfo::Ptr grid_info;
+
+  ASSERT_NO_THROW(grid_info = loadGrid(file_path, DEFAULT_SENSOR_DEV));
+  ASSERT_NE(nullptr, grid_info);
+  ASSERT_DOUBLE_EQ(expected_grid_info->sensor_dev, grid_info->sensor_dev);
+  ASSERT_EQ(expected_grid_info->size_x, grid_info->size_x);
+  ASSERT_EQ(expected_grid_info->size_y, grid_info->size_y);
+  ASSERT_EQ(expected_grid_info->size_z, grid_info->size_z);
+  ASSERT_EQ(expected_grid_info->step_y, grid_info->step_y);
+  ASSERT_EQ(expected_grid_info->step_z, grid_info->step_z);
+  ASSERT_EQ(expected_grid_info->grid.size(), grid_info->grid.size());
+  for(int i = 0; i < expected_grid_info->grid.size(); ++i)
+  {
+    ASSERT_FLOAT_EQ(expected_grid_info->grid[i].dist, grid_info->grid[i].dist);
+    ASSERT_FLOAT_EQ(expected_grid_info->grid[i].prob, grid_info->grid[i].prob);
+  }
+}

@@ -65,4 +65,6 @@ Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev
 
 void saveGrid(Grid3dInfo::Ptr grid_info, const std::string& file_path);
 
+Grid3dInfo::Ptr loadGrid(const std::string& file_path, const double sensor_dev);
+
 }  // namespace amcl3d
