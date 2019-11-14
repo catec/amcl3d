@@ -83,25 +83,41 @@ PointCloudInfo::Ptr computePointCloud(boost::shared_ptr<octomap::OcTree> octo_tr
 
 Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev)
 {
+  if (sensor_dev <= 0)
+    throw std::runtime_error("SensorDev is not greater than zero");
+
   if (!pc_info)
     throw std::runtime_error("PointCloudInfo is NULL");
 
+  if (pc_info->octo_resol <= 0)
+    throw std::runtime_error("Octo resolution is not greater than zero");
+
+  const auto octo_size_x = pc_info->octo_max_x - pc_info->octo_min_x;
+  if (octo_size_x <= 0)
+    throw std::runtime_error("Octo minimum X position is greater or equal than maximum X position");
+  const auto octo_size_y = pc_info->octo_max_y - pc_info->octo_min_y;
+  if (octo_size_y <= 0)
+    throw std::runtime_error("Octo minimum Y position is greater or equal than maximum Y position");
+  const auto octo_size_z = pc_info->octo_max_z - pc_info->octo_min_z;
+  if (octo_size_z <= 0)
+    throw std::runtime_error("Octo minimum Z position is greater or equal than maximum Z position");
+
   Grid3dInfo::Ptr grid_info(new Grid3dInfo());
   grid_info->sensor_dev = sensor_dev;
-
-  //! Alloc the 3D grid
-  const auto octo_size_x = pc_info->octo_max_x - pc_info->octo_min_x;
-  const auto octo_size_y = pc_info->octo_max_y - pc_info->octo_min_y;
-  const auto octo_size_z = pc_info->octo_max_z - pc_info->octo_min_z;
   grid_info->size_x = static_cast<uint32_t>(octo_size_x / pc_info->octo_resol);
   grid_info->size_y = static_cast<uint32_t>(octo_size_y / pc_info->octo_resol);
   grid_info->size_z = static_cast<uint32_t>(octo_size_z / pc_info->octo_resol);
-
   grid_info->step_y = grid_info->size_x;
   grid_info->step_z = grid_info->size_x * grid_info->size_y;
 
   const auto grid_size = grid_info->size_x * grid_info->size_y * grid_info->size_z;
   grid_info->grid.resize(grid_size);
+
+  if (!pc_info->cloud)
+    throw std::runtime_error("PCL::PointCloud is NULL");
+
+  if (pc_info->cloud->empty())
+    throw std::runtime_error("PCL::PointCloud is empty");
 
   //! Setup kdtree
   pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
@@ -127,16 +143,13 @@ Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev
 
         index = ix + iy * grid_info->step_y + iz * grid_info->step_z;
 
+        grid_info->grid[index].dist = -1;
+        grid_info->grid[index].prob = 0;
         if (kdtree.nearestKSearch(search_point, 1, point_idx_nkn_search, point_nkn_squared_distance) > 0)
         {
           dist = point_nkn_squared_distance[0];
           grid_info->grid[index].dist = dist;
           grid_info->grid[index].prob = gauss_const1 * expf(-dist * dist * gauss_const2);
-        }
-        else
-        {
-          grid_info->grid[index].dist = -1.0;
-          grid_info->grid[index].prob = 0.0;
         }
       }
     }
