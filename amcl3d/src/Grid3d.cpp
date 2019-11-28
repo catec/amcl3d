@@ -26,13 +26,11 @@ bool Grid3d::open(const std::string& map_path, const double sensor_dev)
 {
   try
   {
-    //! Load octomap
-    auto octo_tree = openOcTree(map_path);
+    auto octo_tree = openOcTree(map_path); /* Load octomap */
 
     ROS_INFO("[%s] Octomap loaded", ros::this_node::getName().data());
 
-    //! Compute the point-cloud associated to the octomap
-    pc_info_ = computePointCloud(octo_tree);
+    pc_info_ = computePointCloud(octo_tree); /* Compute the point-cloud associated to the octomap */
 
     ROS_INFO("[%s]"
              "\n   Map size:"
@@ -49,7 +47,7 @@ bool Grid3d::open(const std::string& map_path, const double sensor_dev)
     return false;
   }
 
-  //! Try to load the associated grid-map from file
+  /* Try to load the associated grid-map from file */
   std::string grid_path;
   if (map_path.compare(map_path.length() - 3, 3, ".bt") == 0)
     grid_path = map_path.substr(0, map_path.find(".bt")) + ".grid";
@@ -59,12 +57,12 @@ bool Grid3d::open(const std::string& map_path, const double sensor_dev)
   if (loadGrid(grid_path, sensor_dev))
     return true;
 
-  //! Compute the gridMap using kdtree search over the point-cloud
+  /* Compute the gridMap using kdtree search over the point-cloud */
   ROS_INFO("[%s] Computing 3D occupancy grid. This will take some time...", ros::this_node::getName().data());
   grid_info_ = computeGrid(pc_info_, sensor_dev);
   ROS_INFO("[%s] Computing 3D occupancy grid done!", ros::this_node::getName().data());
 
-  //! Save grid on file
+  /* Save grid on file */
   saveGrid(grid_path);
 
   return true;
@@ -90,7 +88,7 @@ bool Grid3d::buildGridSliceMsg(const double z, nav_msgs::OccupancyGrid& msg) con
   msg.info.origin.orientation.z = 0.;
   msg.info.origin.orientation.w = 1.;
 
-  //! Extract max probability
+  /* Extract max probability */
   const uint32_t init = point2grid(pc_info_->octo_min_x, pc_info_->octo_min_y, z);
   const uint32_t end = point2grid(pc_info_->octo_max_x, pc_info_->octo_max_y, z);
   float temp_prob, max_prob = -1.0;
@@ -102,7 +100,7 @@ bool Grid3d::buildGridSliceMsg(const double z, nav_msgs::OccupancyGrid& msg) con
       max_prob = temp_prob;
   }
 
-  //! Copy data into grid msg and scale the probability to [0, 100]
+  /* Copy data into grid msg and scale the probability to [0, 100] */
   if (max_prob < 0.000001f)
     max_prob = 0.000001f;
   max_prob = 100.f / max_prob;
@@ -190,13 +188,13 @@ bool Grid3d::saveGrid(const std::string& grid_path)
     return false;
   }
 
-  //! Write grid general info
+  /* Write grid general info */
   fwrite(&grid_info_->size_x, sizeof(uint32_t), 1, pf);
   fwrite(&grid_info_->size_y, sizeof(uint32_t), 1, pf);
   fwrite(&grid_info_->size_z, sizeof(uint32_t), 1, pf);
   fwrite(&grid_info_->sensor_dev, sizeof(double), 1, pf);
 
-  //! Write grid cells
+  /* Write grid cells */
   const auto grid_size = grid_info_->size_x * grid_info_->size_y * grid_info_->size_z;
   fwrite(grid_info_->grid.data(), sizeof(Grid3dCell), grid_size, pf);
 
@@ -218,7 +216,7 @@ bool Grid3d::loadGrid(const std::string& grid_path, const double sensor_dev)
 
   grid_info_.reset(new Grid3dInfo());
 
-  //! Read grid general info
+  /* Read grid general info */
   fread(&grid_info_->size_x, sizeof(uint32_t), 1, pf);
   fread(&grid_info_->size_y, sizeof(uint32_t), 1, pf);
   fread(&grid_info_->size_z, sizeof(uint32_t), 1, pf);
@@ -233,7 +231,7 @@ bool Grid3d::loadGrid(const std::string& grid_path, const double sensor_dev)
   grid_info_->step_y = grid_info_->size_x;
   grid_info_->step_z = grid_info_->size_x * grid_info_->size_y;
 
-  //! Read grid cells
+  /* Read grid cells */
   const auto grid_size = grid_info_->size_x * grid_info_->size_y * grid_info_->size_z;
   grid_info_->grid.resize(grid_size);
   fread(grid_info_->grid.data(), sizeof(Grid3dCell), grid_size, pf);

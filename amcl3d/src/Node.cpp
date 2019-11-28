@@ -95,17 +95,17 @@ void Node::publishGridSlice(const ros::TimerEvent&)
 
 void Node::publishParticles()
 {
-  //! If the filter is not initialized then exit
+  /* If the filter is not initialized then exit */
   if (!pf_.isInitialized())
     return;
 
-  //! Build the msg based on the particles position and orientation
+  /* Build the msg based on the particles position and orientation */
   geometry_msgs::PoseArray msg;
   pf_.buildParticlesPoseMsg(msg);
   msg.header.stamp = ros::Time::now();
   msg.header.frame_id = parameters_.global_frame_id_;
 
-  //! Publish particle cloud
+  /* Publish particle cloud */
   particles_pose_pub_.publish(msg);
 }
 
@@ -119,14 +119,14 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
     return;
   }
 
-  //! Check if an update must be performed or not
+  /* Check if an update must be performed or not */
   if (!checkUpdateThresholds())
     return;
 
   static const ros::Duration update_interval(1.0 / parameters_.update_rate_);
   nextupdate_time_ = ros::Time::now() + update_interval;
 
-  //! Apply voxel grid
+  /* Apply voxel grid */
   clock_t begin_filter = clock();
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_src(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromROSMsg(*msg, *cloud_src);
@@ -143,7 +143,7 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   double elapsed_secs = double(end_filter - begin_filter) / CLOCKS_PER_SEC;
   ROS_INFO("Filter time: [%lf] sec", elapsed_secs);
 
-  //! Perform particle prediction based on odometry
+  /* Perform particle prediction based on odometry */
   odom_increment_tf_ = lastupdatebase_2_odom_tf_.inverse() * base_2_odom_tf_;
   const double delta_x = odom_increment_tf_.getOrigin().getX();
   const double delta_y = odom_increment_tf_.getOrigin().getY();
@@ -157,7 +157,7 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   elapsed_secs = double(end_predict - begin_predict) / CLOCKS_PER_SEC;
   ROS_INFO("Predict time: [%lf] sec", elapsed_secs);
 
-  //! Perform particle update based on current point-cloud
+  /* Perform particle update based on current point-cloud */
   clock_t begin_update = clock();
   pf_.update(grid3d_, cloud_down, range_data, parameters_.alpha_, parameters_.sensor_range_);
   clock_t end_update = clock();
@@ -166,13 +166,13 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 
   mean_p_ = pf_.getMean();
 
-  //! Clean the range buffer
+  /* Clean the range buffer */
   range_data.clear();
 
-  //! Update time and transform information
+  /* Update time and transform information */
   lastupdatebase_2_odom_tf_ = base_2_odom_tf_;
 
-  //! Do the resampling if needed
+  /* Do the resampling if needed */
   clock_t begin_resample = clock();
   static int n_updates = 0;
   if (++n_updates > parameters_.resample_interval_)
@@ -185,7 +185,7 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   elapsed_secs = double(end_resample - begin_resample) / CLOCKS_PER_SEC;
   ROS_INFO("Resample time: [%lf] sec", elapsed_secs);
 
-  //! Publish particles
+  /* Publish particles */
   publishParticles();
 
   ROS_INFO("pointcloudCallback close");
@@ -200,7 +200,7 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
   base_2_odom_tf_.setRotation(tf::Quaternion(msg->transform.rotation.x, msg->transform.rotation.y,
                                              msg->transform.rotation.z, msg->transform.rotation.w));
 
-  //! If the filter is not initialized then exit
+  /* If the filter is not initialized then exit */
   if (!pf_.isInitialized())
   {
     ROS_WARN("Filter not initialized yet, waiting for initial pose.");
@@ -215,7 +215,7 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
     return;
   }
 
-  //! Update roll and pitch from odometry
+  /* Update roll and pitch from odometry */
   double yaw;
   base_2_odom_tf_.getBasis().getRPY(roll_, pitch_, yaw);
 
@@ -236,17 +236,17 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
   {
     ROS_WARN("Not <<taken off>> yet");
 
-    //! Check takeoff height
+    /* Check takeoff height */
     has_takenoff = base_2_odom_tf_.getOrigin().getZ() > parameters_.take_off_height_;
 
     lastbase_2_world_tf_ = initodom_2_world_tf_ * base_2_odom_tf_;
     lastodom_2_world_tf_ = initodom_2_world_tf_;
 
-    lastmean_p_ = mean_p_;  // for not 'jumping' whenever has_takenoff is true
+    lastmean_p_ = mean_p_;  // for not 'jumping' whenever has_takenoff is true */
   }
   else
   {
-    //! Check if AMCL went wrong (nan, inf)
+    /* Check if AMCL went wrong (nan, inf) */
     if (std::isnan(mean_p_.x) || std::isnan(mean_p_.y) || std::isnan(mean_p_.z) || std::isnan(mean_p_.a))
     {
       ROS_WARN("AMCL NaN detected");
@@ -258,7 +258,7 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
       amcl_out_ = true;
     }
 
-    //! Check jumps
+    /* Check jumps */
     if (fabs(mean_p_.x - lastmean_p_.x) > 1.)
     {
       ROS_WARN("AMCL Jump detected in X");
@@ -304,7 +304,7 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
     }
   }
 
-  //! Publish transform
+  /* Publish transform */
   geometry_msgs::TransformStamped odom_2_base_tf;
   odom_2_base_tf.header.stamp = msg->header.stamp;
   odom_2_base_tf.header.frame_id = parameters_.global_frame_id_;
@@ -354,14 +354,14 @@ bool Node::checkUpdateThresholds()
 
   odom_increment_tf_ = lastupdatebase_2_odom_tf_.inverse() * base_2_odom_tf_;
 
-  //! Check translation threshold
+  /* Check translation threshold */
   if (odom_increment_tf_.getOrigin().length() > parameters_.d_th_)
   {
     ROS_INFO("Translation update");
     return true;
   }
 
-  //! Check yaw threshold
+  /* Check yaw threshold */
   double yaw, pitch, roll;
   odom_increment_tf_.getBasis().getRPY(roll, pitch, yaw);
   if (fabs(yaw) > parameters_.a_th_)
@@ -390,11 +390,11 @@ void Node::setInitialPose(const tf::Transform& init_pose, const float x_dev, con
   mean_p_ = pf_.getMean();
   lastmean_p_ = mean_p_;
 
-  //! Extract TFs for future updates
-  //! Reset lastupdatebase_2_odom_tf_
+  /* Extract TFs for future updates */
+  /* Reset lastupdatebase_2_odom_tf_ */
   lastupdatebase_2_odom_tf_ = base_2_odom_tf_;
 
-  //! Publish particles
+  /* Publish particles */
   publishParticles();
 }
 
@@ -420,7 +420,7 @@ void Node::rvizMarkerPublish(const uint32_t anchor_id, const float r, const geom
   marker.scale.y = r;
   marker.scale.z = r;
   marker.color.a = 0.5;
-  if (amcl_out_)  //! Indicate if AMCL was lost
+  if (amcl_out_) /* Indicate if AMCL was lost */
   {
     marker.color.r = 1.0;
     marker.color.g = 1.0;
@@ -451,7 +451,7 @@ void Node::rvizMarkerPublish(const uint32_t anchor_id, const float r, const geom
   marker.points.push_back(uav);
   marker.points.push_back(anchor);
 
-  //! Publish marker
+  /* Publish marker */
   range_markers_pub_.publish(marker);
 }
 

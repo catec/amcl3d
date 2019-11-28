@@ -16,14 +16,14 @@ It takes information from an odometry source, point-clouds from an onboard senso
 
 Apache 2.0
 
-**Author: Paloma Carrasco Fernández (pcarrasco@catec.aero),
-          Francisco Cuesta Rodríguez (fcuesta@catec.aero),
+**Author: Paloma Carrasco Fernï¿½ndez (pcarrasco@catec.aero),
+          Francisco Cuesta Rodrï¿½guez (fcuesta@catec.aero),
           Francisco J.Perez-Grau (fjperez@catec.aero)**
 
 **Affiliation: [FADA-CATEC](https://http://www.catec.aero//)**
 
-**Maintainer: Paloma Carrasco Fernández (pcarrasco@catec.aero),
-              Francisco Cuesta Rodríguez (fcuesta@catec.aero)**
+**Maintainer: Paloma Carrasco Fernï¿½ndez (pcarrasco@catec.aero),
+              Francisco Cuesta Rodrï¿½guez (fcuesta@catec.aero)**
 
 The amcl3d package has been tested under [ROS] Kinetic and Ubuntu 16.04.
 
@@ -71,6 +71,15 @@ Run the test with
           
 		  roslaunch amcl3d amcl3d_test.launch
 
+### Doxygen
+The code has been commentes to offert the posibility to generate a Doxygen documentation. To generate it:
+
+     rosdoc_lite /path/to/workspace/src/amcl3d/amcl3d
+
+To install the rosdoc_lite package:
+
+     apt-get install ros-kinetic-rosdoc_lite
+     
 ### Bugs & Feature Requests
 
 Please report bugs and request features using the [Issue Tracker](https://github.com/fada-catec/amcl3d/issues).

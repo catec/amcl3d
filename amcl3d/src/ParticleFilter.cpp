@@ -47,10 +47,10 @@ void ParticleFilter::init(const int num_particles, const float x_init, const flo
                           const float a_init, const float x_dev, const float y_dev, const float z_dev,
                           const float a_dev)
 {
-  //! Resize particle set
+  /*  Resize particle set */
   p_.resize(abs(num_particles));
 
-  //! Sample the given pose
+  /*  Sample the given pose */
   const float dev = std::max(std::max(x_dev, y_dev), z_dev);
   const float gauss_const_1 = 1. / (dev * sqrt(2 * M_PI));
   const float gauss_const_2 = 1. / (2 * dev * dev);
@@ -103,7 +103,7 @@ void ParticleFilter::predict(const double odom_x_mod, const double odom_y_mod, c
   const double z_dev = fabs(delta_z * odom_z_mod);
   const double a_dev = fabs(delta_a * odom_a_mod);
 
-  //! Make a prediction for all particles according to the odometry
+  /*  Make a prediction for all particles according to the odometry */
   float sa, ca, rand_x, rand_y;
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
@@ -121,18 +121,18 @@ void ParticleFilter::predict(const double odom_x_mod, const double odom_y_mod, c
 void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
                             const std::vector<Range>& range_data, const double alpha, const double sigma)
 {
-  //! Incorporate measurements
+  /*  Incorporate measurements */
   float wtp = 0, wtr = 0;
 
   clock_t begin_for1 = clock();
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
-    //! Get particle information
+    /*  Get particle information */
     float tx = p_[i].x;
     float ty = p_[i].y;
     float tz = p_[i].z;
 
-    //! Check the particle is into the map
+    /*  Check the particle is into the map */
     if (!grid3d.isIntoMap(tx, ty, tz))
     {
       // std::cout << "Not into map: " << grid3d_.isIntoMap(tx, ty, tz-1.0) << std::endl;
@@ -140,13 +140,13 @@ void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::Poi
       continue;
     }
 
-    //! Evaluate the weight of the point cloud
+    /*  Evaluate the weight of the point cloud */
     p_[i].wp = grid3d.computeCloudWeight(cloud, tx, ty, tz, p_[i].a);
 
-    //! Evaluate the weight of the range sensors
+    /*  Evaluate the weight of the range sensors */
     p_[i].wr = computeRangeWeight(tx, ty, tz, range_data, sigma);
 
-    //! Increase the summatory of weights
+    /*  Increase the summatory of weights */
     wtp += p_[i].wp;
     wtr += p_[i].wr;
   }
@@ -154,7 +154,7 @@ void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::Poi
   double elapsed_secs = double(end_for1 - begin_for1) / CLOCKS_PER_SEC;
   ROS_INFO("Update time 1: [%lf] sec", elapsed_secs);
 
-  //! Normalize all weights
+  /*  Normalize all weights */
   float wt = 0;
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
@@ -170,7 +170,7 @@ void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::Poi
 
     if (!grid3d.isIntoMap(p_[i].x, p_[i].y, p_[i].z))
     {
-      // std::cout << "Not into map: " << grid3d_.isIntoMap(tx, ty, tz-1.0) << std::endl;
+      /* std::cout << "Not into map: " << grid3d_.isIntoMap(tx, ty, tz-1.0) << std::endl; */
       p_[i].w = 0;
     }
     else
@@ -203,7 +203,7 @@ void ParticleFilter::resample(const int num_particles, const float x_dev, const 
   uint32_t index = 0;
   float u;
 
-  //! Do resamplig
+  /*  Do resamplig */
   std::vector<Particle> new_particles;
   Particle new_particle;
   Particle temporal_mean;
@@ -243,10 +243,10 @@ void ParticleFilter::resample(const int num_particles, const float x_dev, const 
     new_particles.push_back(new_particle);
   }
 
-  //! Asign the new particles set
+  /*  Asign the new particles set */
   p_ = new_particles;
 
-  //! Normalize all weights and update the mean
+  /*  Normalize all weights and update the mean */
   Particle mean_p;
 
   for (uint32_t i = 0; i < p_.size(); ++i)

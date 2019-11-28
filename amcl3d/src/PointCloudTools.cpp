@@ -89,7 +89,7 @@ Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev
   Grid3dInfo::Ptr grid_info(new Grid3dInfo());
   grid_info->sensor_dev = sensor_dev;
 
-  //! Alloc the 3D grid
+  /* Alloc the 3D grid */
   const auto octo_size_x = pc_info->octo_max_x - pc_info->octo_min_x;
   const auto octo_size_y = pc_info->octo_max_y - pc_info->octo_min_y;
   const auto octo_size_z = pc_info->octo_max_z - pc_info->octo_min_z;
@@ -103,11 +103,11 @@ Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev
   const auto grid_size = grid_info->size_x * grid_info->size_y * grid_info->size_z;
   grid_info->grid.resize(grid_size);
 
-  //! Setup kdtree
+  /* Setup kdtree */
   pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
   kdtree.setInputCloud(pc_info->cloud);
 
-  //! Compute the distance to the closest point of the grid
+  /* Compute the distance to the closest point of the grid */
   const float gauss_const1 = static_cast<float>(1. / (grid_info->sensor_dev * sqrt(2 * M_PI)));
   const float gauss_const2 = static_cast<float>(1. / (2. * grid_info->sensor_dev * grid_info->sensor_dev));
   uint32_t index;
