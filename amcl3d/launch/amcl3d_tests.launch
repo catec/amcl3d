@@ -12,7 +12,7 @@
   <arg name="alpha" />
   <arg name="input_bag_name" />
   <arg name="output_bag_name" />
-  <arg name="output_topics" default="/vicon_odometry /amcl3d_node/base_transform /tf"/>
+  <arg name="output_topics" default="/vicon_odometry /amcl3d_node/base_transform /tf /vicon"/>
 
   <include file="$(find amcl3d)/launch/amcl3d.launch">
     <arg name="map_name_path" value="$(arg map_name_path)"/>

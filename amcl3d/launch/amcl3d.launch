@@ -97,7 +97,7 @@
     <param name="odom_y_mod" value="0.1"/>
 
     <!-- To set the thresholds of Z-axis where the filter can predict the particles -->
-    <param name="odom_z_mod" value="0.1"/>
+    <param name="odom_z_mod" value="0.01"/>
 
     <!-- To set the thresholds of YAW angle where the filter can predict the particles -->
     <param name="odom_a_mod" value="0.3"/>
@@ -109,10 +109,10 @@
     <param name="update_rate" value="100"/>
 
     <!-- To set the threshold for the update in the distance -->
-    <param name="d_th" value="0.1"/>
+    <param name="d_th" value="0.05"/>
 
     <!-- To set the threshold for the update in yaw angle -->
-    <param name="a_th" value="0.3"/>
+    <param name="a_th" value="0.03"/>
 
     <!-- To set the threshold for UAV takeoff -->
     <param name="take_off_height" value="$(arg take_off_height)"/>

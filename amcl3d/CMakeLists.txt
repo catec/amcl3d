@@ -60,13 +60,6 @@ add_executable(${PROJECT_NAME}_node
 add_dependencies(${PROJECT_NAME}_node       ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_node  ${catkin_LIBRARIES} ${PROJECT_NAME})
 
-file(GLOB_RECURSE DEMO_SRCS "demo/*.c*")
-file(GLOB_RECURSE DEMO_HDRS "demo/*.h*")
-
-add_executable(${PROJECT_NAME}_demo         ${DEMO_SRCS} ${DEMO_HDRS})
-add_dependencies(${PROJECT_NAME}_demo       ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_demo  ${catkin_LIBRARIES})
-
 #############
 ## Testing ##
 #############
