@@ -1,15 +1,14 @@
 <?xml version="1.0"?>
 <launch>
 
-  <arg name="map_name_path" />
-  <arg name="init_x_b" />
-  <arg name="init_y_b" />
-  <arg name="init_z_b" />
-  <arg name="init_a_b" />
-  <arg name="num_particles" />
-  <arg name="alpha" />
-  <arg name="take_off_height" />
-
+  <arg name="map_name_path"/>
+  <arg name="init_x"/>
+  <arg name="init_y"/>
+  <arg name="init_z"/>
+  <arg name="init_a"/>
+  <arg name="num_particles"/>
+  <arg name="alpha"/>
+  <arg name="take_off_height"/>
 
   <node pkg="amcl3d" type="amcl3d_node" name="amcl3d_node" output="screen">
 
@@ -42,16 +41,16 @@
     <param name="set_initial_pose" value="true"/>
 
     <!-- To set the position in X-axis -->
-    <param name="init_x" value="$(arg init_x_b)"/>
+    <param name="init_x" value="$(arg init_x)"/>
 
     <!-- To set the position in Y-axis -->
-    <param name="init_y" value="$(arg init_y_b)"/>
+    <param name="init_y" value="$(arg init_y)"/>
 
     <!-- To set the position in Z-axis -->
-    <param name="init_z" value="$(arg init_z_b)"/>
+    <param name="init_z" value="$(arg init_z)"/>
 
     <!-- To set the YAW angle -->
-    <param name="init_a" value="$(arg init_a_b)"/>
+    <param name="init_a" value="$(arg init_a)"/>
 
     <!-- To set thresholds of X-axis in initial pose -->
     <param name="init_x_dev" value="0.05"/>
