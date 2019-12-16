@@ -167,7 +167,7 @@ public:
    * complete the number of particles that the filter must have, new ones are introduced taking the average of those
    * that passed the resampling and applying the same variance thresholds that is applied in the prediction.
    */
-  void resample(const int num_particles, const float x_dev, const float y_dev, const float z_dev, const float a_dev);
+  void resample();
 
 private:
   /*! \brief To get the particle weight according to the radio-range sensor.

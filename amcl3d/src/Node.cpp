@@ -178,8 +178,7 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   if (++n_updates > parameters_.resample_interval_)
   {
     n_updates = 0;
-    pf_.resample(parameters_.num_particles_, parameters_.init_x_dev_, parameters_.init_y_dev_, parameters_.init_z_dev_,
-                 parameters_.init_a_dev_);
+    pf_.resample();
   }
   clock_t end_resample = clock();
   elapsed_secs = double(end_resample - begin_resample) / CLOCKS_PER_SEC;
