@@ -41,6 +41,8 @@ To know in more detail the behavior of the package:
 
 * **[amcl3d (Wiki-ROS)](http://wiki.ros.org/amcl3d#preview)**
 
+* The parameters of the algorithm may have varied, since you are in the development branch. As new releases are made, the wiki will be updated with respect to the main branch 'kinetic'.
+
 ### Installation
 
 #### Building from Source
@@ -54,22 +56,28 @@ To build from source, clone the latest version from this repository into your ca
      cd ../
      catkin build
 
-### Tests
-
-Run the test with
-
-     roslaunch ouster_ros os1.launch os1_hostname:=10.5.5.94 replay:=true
-     roslaunch amcl3d amcl3d_test.launch
-
 ### Launch files
 
 * **amcl3d.launch:** it contains the start of amcl3d node with a standard configuration of parameters.
 
           roslaunch amcl3d amcl3d.launch
 		  
-* **amcl3d_test.launch:**  this roslaunch allows you to start the RViz with the aforementioned configuration, the amcl3d node, the test-amcl3d node, the bag player and creates a transformation to relate the point-cloud frame of test-amcl3d node with the robot frame of amcl3d node.
+* **amcl3d_rosin.launch:**  it contains the initial pose, particle number, 'alpha' parameter, 'take_off_height' parameter and the correctly map to run the algorithm with the correcly data of the demo bag. 
           
-		  roslaunch amcl3d amcl3d_test.launch
+		roslaunch amcl3d amcl3d_test.launch
+
+### Gmoke Tests
+
+This branch contains differents tests to evaluate the correct behaviour of the algorithm. To run these tests it is necessary to have the rosbag of the 'Version 1.1.0' release.
+
+     To compile:
+
+          catkin_make tests
+
+     To run:
+
+          rosrun amcl3d amcl3d_tests
+
 
 ### Doxygen
 The code has been commentes to offert the posibility to generate a Doxygen documentation. To generate it:
