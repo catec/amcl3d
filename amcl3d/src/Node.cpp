@@ -111,7 +111,7 @@ void Node::publishParticles()
 
 void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-  ROS_INFO("pointcloudCallback open");
+  ROS_DEBUG("pointcloudCallback open");
 
   if (!is_odom_)
   {
@@ -141,7 +141,7 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   cloud_filter_pub_.publish(cloud_down_msg);
   clock_t end_filter = clock();
   double elapsed_secs = double(end_filter - begin_filter) / CLOCKS_PER_SEC;
-  ROS_INFO("Filter time: [%lf] sec", elapsed_secs);
+  ROS_DEBUG("Filter time: [%lf] sec", elapsed_secs);
 
   /* Perform particle prediction based on odometry */
   odom_increment_tf_ = lastupdatebase_2_odom_tf_.inverse() * base_2_odom_tf_;
@@ -155,14 +155,14 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
               delta_x, delta_y, delta_z, delta_a);
   clock_t end_predict = clock();
   elapsed_secs = double(end_predict - begin_predict) / CLOCKS_PER_SEC;
-  ROS_INFO("Predict time: [%lf] sec", elapsed_secs);
+  ROS_DEBUG("Predict time: [%lf] sec", elapsed_secs);
 
   /* Perform particle update based on current point-cloud */
   clock_t begin_update = clock();
   pf_.update(grid3d_, cloud_down, range_data, parameters_.alpha_, parameters_.sensor_range_, roll_, pitch_);
   clock_t end_update = clock();
   elapsed_secs = double(end_update - begin_update) / CLOCKS_PER_SEC;
-  ROS_INFO("Update time: [%lf] sec", elapsed_secs);
+  ROS_DEBUG("Update time: [%lf] sec", elapsed_secs);
 
   mean_p_ = pf_.getMean();
 
@@ -182,17 +182,17 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   }
   clock_t end_resample = clock();
   elapsed_secs = double(end_resample - begin_resample) / CLOCKS_PER_SEC;
-  ROS_INFO("Resample time: [%lf] sec", elapsed_secs);
+  ROS_DEBUG("Resample time: [%lf] sec", elapsed_secs);
 
   /* Publish particles */
   publishParticles();
 
-  ROS_INFO("pointcloudCallback close");
+  ROS_DEBUG("pointcloudCallback close");
 }
 
 void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
 {
-  ROS_INFO("odomCallback open");
+  ROS_DEBUG("odomCallback open");
 
   base_2_odom_tf_.setOrigin(
       tf::Vector3(msg->transform.translation.x, msg->transform.translation.y, msg->transform.translation.z));
@@ -320,12 +320,12 @@ void Node::odomCallback(const geometry_msgs::TransformStampedConstPtr& msg)
   tf_br.sendTransform(tf::StampedTransform(lastodom_2_world_tf_, ros::Time::now(), parameters_.global_frame_id_,
                                            parameters_.odom_frame_id_));
 
-  ROS_INFO("odomCallback close");
+  ROS_DEBUG("odomCallback close");
 }
 
 void Node::rangeCallback(const rosinrange_msg::RangePoseConstPtr& msg)
 {
-  ROS_INFO("rangeCallback open");
+  ROS_DEBUG("rangeCallback open");
 
   geometry_msgs::Point anchor;
   anchor.x = msg->position.x;
@@ -341,7 +341,7 @@ void Node::rangeCallback(const rosinrange_msg::RangePoseConstPtr& msg)
 
   rvizMarkerPublish(msg->source_id, static_cast<float>(msg->range), uav, anchor);
 
-  ROS_INFO("rangeCallback close");
+  ROS_DEBUG("rangeCallback close");
 }
 
 bool Node::checkUpdateThresholds()

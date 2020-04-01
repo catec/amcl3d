@@ -153,7 +153,7 @@ void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::Poi
   }
   clock_t end_for1 = clock();
   double elapsed_secs = double(end_for1 - begin_for1) / CLOCKS_PER_SEC;
-  ROS_INFO("Update time 1: [%lf] sec", elapsed_secs);
+  ROS_DEBUG("Update time 1: [%lf] sec", elapsed_secs);
 
   /*  Normalize all weights */
   float wt = 0;
