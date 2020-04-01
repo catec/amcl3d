@@ -93,9 +93,9 @@ Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev
   const auto octo_size_x = pc_info->octo_max_x - pc_info->octo_min_x;
   const auto octo_size_y = pc_info->octo_max_y - pc_info->octo_min_y;
   const auto octo_size_z = pc_info->octo_max_z - pc_info->octo_min_z;
-  grid_info->size_x = static_cast<uint32_t>(octo_size_x / pc_info->octo_resol);
-  grid_info->size_y = static_cast<uint32_t>(octo_size_y / pc_info->octo_resol);
-  grid_info->size_z = static_cast<uint32_t>(octo_size_z / pc_info->octo_resol);
+  grid_info->size_x = static_cast<uint32_t>(ceil(octo_size_x / pc_info->octo_resol));
+  grid_info->size_y = static_cast<uint32_t>(ceil(octo_size_y / pc_info->octo_resol));
+  grid_info->size_z = static_cast<uint32_t>(ceil(octo_size_z / pc_info->octo_resol));
 
   grid_info->step_y = grid_info->size_x;
   grid_info->step_z = grid_info->size_x * grid_info->size_y;
