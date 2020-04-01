@@ -159,7 +159,7 @@ void Node::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 
   /* Perform particle update based on current point-cloud */
   clock_t begin_update = clock();
-  pf_.update(grid3d_, cloud_down, range_data, parameters_.alpha_, parameters_.sensor_range_);
+  pf_.update(grid3d_, cloud_down, range_data, parameters_.alpha_, parameters_.sensor_range_, roll_, pitch_);
   clock_t end_update = clock();
   elapsed_secs = double(end_update - begin_update) / CLOCKS_PER_SEC;
   ROS_INFO("Update time: [%lf] sec", elapsed_secs);

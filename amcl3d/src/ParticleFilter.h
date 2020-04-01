@@ -152,7 +152,9 @@ public:
    * for all particles and finds the average for the composition of the UAV pose.
    */
   void update(const Grid3d& grid3d, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
-              const std::vector<Range>& range_data, const double alpha, const double sigma);
+              const std::vector<Range>& range_data, const double alpha, const double sigma,
+              const double roll, const double pitch);
+  void update(const std::vector<Range>& range_data, const double alpha, const double sigma);
 
   /*! \brief This function implements the PF resample stage.
    * Translation in X, Y and Z in meters and yaw angle incremenet in rad.

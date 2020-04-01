@@ -122,13 +122,22 @@ bool Grid3d::buildMapPointCloudMsg(sensor_msgs::PointCloud2& msg) const
 }
 
 float Grid3d::computeCloudWeight(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const float tx, const float ty,
-                                 const float tz, const float a) const
+                                 const float tz, const float roll, const float pitch, const float yaw) const
 {
   if (!grid_info_ || !pc_info_)
     return 0;
 
-  const auto sa = sin(a);
-  const auto ca = cos(a);
+  const auto sr = sin(roll);
+  const auto cr = cos(roll);
+  const auto sp = sin(pitch);
+  const auto cp = cos(pitch);
+  const auto sy = sin(yaw);
+  const auto cy = cos(yaw);
+
+  float r00, r01, r02, r10, r11, r12, r20, r21, r22;
+  r00 = cy*cp; r01 = cy*sp*sr - sy*cr; r02 = cy*sp*cr + sy*sr;
+  r10 = sy*cp; r11 = sy*sp*sr + cy*cr; r12 = sy*sp*cr - cy*sr;
+  r20 =   -sp; r21 =            cp*sr; r22 =            cp*cr;
 
   const auto octo_size_x = pc_info_->octo_max_x - pc_info_->octo_min_x;
   const auto octo_size_y = pc_info_->octo_max_y - pc_info_->octo_min_y;
@@ -139,10 +148,13 @@ float Grid3d::computeCloudWeight(const pcl::PointCloud<pcl::PointXYZ>::Ptr& clou
   const auto offset_z = tz - pc_info_->octo_min_z;
 
   auto grid_ptr = grid_info_->grid.data();
+  const auto grid_size = grid_info_->grid.size();
   pcl::PointXYZ new_point;
+  uint32_t ix, iy, iz;
   uint32_t grid_index;
   float weight = 0.;
   int n = 0;
+  const float error_z = 0;
 
   for (pcl::PointCloud<pcl::PointXYZ>::const_iterator it = cloud->begin(); it != cloud->end(); ++it)
   {
@@ -150,20 +162,30 @@ float Grid3d::computeCloudWeight(const pcl::PointCloud<pcl::PointXYZ>::Ptr& clou
     if (point == nullptr)
       continue;
 
-    new_point.x = ca * point->x - sa * point->y + offset_x;
-    new_point.y = sa * point->x + ca * point->y + offset_y;
-    new_point.z = point->z + offset_z;
+    new_point.x = point->x*r00 + point->y*r01 + (point->z + error_z)*r02 + offset_x;
+    new_point.y = point->x*r10 + point->y*r11 + (point->z + error_z)*r12 + offset_y;
+    new_point.z = point->x*r20 + point->y*r21 + (point->z + error_z)*r22 + offset_z;
 
     if (new_point.x >= 0 && new_point.x < octo_size_x && new_point.y >= 0 && new_point.y < octo_size_y &&
         new_point.z >= 0 && new_point.z < octo_size_z)
     {
-      grid_index = static_cast<uint32_t>(new_point.x / pc_info_->octo_resol) +
-                   static_cast<uint32_t>(new_point.y / pc_info_->octo_resol) * grid_info_->step_y +
-                   static_cast<uint32_t>(new_point.z / pc_info_->octo_resol) * grid_info_->step_z;
-      weight += grid_ptr[grid_index].prob;
-      n += 1;
+      ix = static_cast<uint32_t>(floor(new_point.x / pc_info_->octo_resol));
+      iy = static_cast<uint32_t>(floor(new_point.y / pc_info_->octo_resol));
+      iz = static_cast<uint32_t>(floor(new_point.z / pc_info_->octo_resol));
+
+      if (ix < grid_info_->size_x && iy < grid_info_->size_y && iz < grid_info_->size_z)
+      {
+        grid_index = ix + iy * grid_info_->step_y + iz * grid_info_->step_z;
+
+        if(grid_index < grid_size)
+        {
+          weight += grid_ptr[grid_index].prob;
+          n += 1;
+        }
+      }
     }
   }
+
   return (n <= 10) ? 0 : weight / n;
 }
 
@@ -210,7 +232,7 @@ bool Grid3d::loadGrid(const std::string& grid_path, const double sensor_dev)
   auto pf = fopen(grid_path.c_str(), "rb");
   if (!pf)
   {
-    ROS_ERROR("[%s] Error opening file %s for reading", ros::this_node::getName().data(), grid_path.c_str());
+    ROS_WARN("[%s] Error opening file %s for reading", ros::this_node::getName().data(), grid_path.c_str());
     return false;
   }
 
@@ -224,7 +246,7 @@ bool Grid3d::loadGrid(const std::string& grid_path, const double sensor_dev)
 
   if (std::fabs(grid_info_->sensor_dev - sensor_dev) >= std::numeric_limits<double>::epsilon())
   {
-    ROS_ERROR("[%s] Loaded sensorDev is different", ros::this_node::getName().data());
+    ROS_WARN("[%s] Loaded sensorDev is different", ros::this_node::getName().data());
     return false;
   }
 

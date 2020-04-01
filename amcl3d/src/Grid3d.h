@@ -101,7 +101,7 @@ public:
    * point cloud and the map. Depending on the resemblance the particle acquires the weight.
    */
   float computeCloudWeight(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const float tx, const float ty,
-                           const float tz, const float a) const;
+                           const float tz, const float roll, const float pitch, const float yaw) const;
 
   /*! \brief To check if the particle is into the map.
    *

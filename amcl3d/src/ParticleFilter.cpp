@@ -119,7 +119,8 @@ void ParticleFilter::predict(const double odom_x_mod, const double odom_y_mod, c
 }
 
 void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
-                            const std::vector<Range>& range_data, const double alpha, const double sigma)
+                            const std::vector<Range>& range_data, const double alpha, const double sigma,
+                            const double roll, const double pitch)
 {
   /*  Incorporate measurements */
   float wtp = 0, wtr = 0;
@@ -141,7 +142,7 @@ void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::Poi
     }
 
     /*  Evaluate the weight of the point cloud */
-    p_[i].wp = grid3d.computeCloudWeight(cloud, tx, ty, tz, p_[i].a);
+    p_[i].wp = grid3d.computeCloudWeight(cloud, tx, ty, tz, roll, pitch, p_[i].a);
 
     /*  Evaluate the weight of the range sensors */
     p_[i].wr = computeRangeWeight(tx, ty, tz, range_data, sigma);
