@@ -41,7 +41,6 @@ To know in more detail the behavior of the package:
 
 * **[amcl3d (Wiki-ROS)](http://wiki.ros.org/amcl3d#preview)**
 
-* The parameters of the algorithm may have varied, since you are in the development branch. As new releases are made, the wiki will be updated with respect to the main branch 'kinetic'.
 
 ### Installation
 
@@ -62,9 +61,9 @@ To build from source, clone the latest version from this repository into your ca
 
           roslaunch amcl3d amcl3d.launch
 		  
-* **amcl3d_rosin.launch:**  it contains the initial pose, particle number, 'alpha' parameter, 'take_off_height' parameter and the correctly map to run the algorithm with the correcly data of the demo bag. 
+* **amcl3d_rosin.launch:**  it contains the initial pose, particle number, 'alpha' parameter, 'take_off_height' parameter and the correctly map to run the algorithm with the correcly data of the rosbag. 
           
-		roslaunch amcl3d amcl3d_test.launch
+		roslaunch amcl3d amcl3d_rosin.launch
 
 ### Gmoke Tests
 
