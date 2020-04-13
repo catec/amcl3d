@@ -129,7 +129,7 @@ TEST_F(Grid3dTest, computeCloudWeightTest)
   float ty = 10.140815;
   float tz = 3.372801;
   float a = 0.166781;
-  float wp_real = 2.7892310619354248;
+  float wp_real = 3.8109049797058105;
 
   // Deserialize msg
   std::ifstream ifs(source + "/tests/data/grid_info.bin", std::ios::in | std::ios::binary);
@@ -157,14 +157,14 @@ TEST_F(Grid3dTest, computeCloudWeightTest)
   }
 
   // computeCloudWeigh without Open
-  float result_0 = _sut.computeCloudWeight(points_grid, 20.017967, 10.140815, 3.372801, 0.166781);
+  float result_0 = _sut.computeCloudWeight(points_grid, 20.017967, 10.140815, 3.372801, 0, 0, 0.166781);
   EXPECT_EQ(result_0, 0);
 
   // Open
   bool open = _sut.open(map_path, DEFAULT_SENSOR_DEV);
 
   // computeCloudWeight in known point
-  float result = _sut.computeCloudWeight(points_grid, 20.017967, 10.140815, 3.372801, 0.166781);
+  float result = _sut.computeCloudWeight(points_grid, 20.017967, 10.140815, 3.372801, 0, 0, 0.166781);
   EXPECT_NEAR(result, wp_real, 0.0001);
 }
 
@@ -236,7 +236,7 @@ TEST_F(Grid3dTest, computeCloudWeightParticlesTest)
 
   for (uint32_t i = 0; i < wp_vector.size(); ++i)
   {
-    wp_test.push_back(_sut.computeCloudWeight(points_grid, tx_vector[i], ty_vector[i], tz_vector[i], ta_vector[i]));
+    wp_test.push_back(_sut.computeCloudWeight(points_grid, tx_vector[i], ty_vector[i], tz_vector[i], 0, 0, ta_vector[i]));
     wp_test[i] /= wtp;
     EXPECT_NEAR(wp_vector[i], wp_test[i], 0.0001);
   }
