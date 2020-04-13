@@ -1,10 +1,14 @@
 <?xml version="1.0"?>
 <launch>
 
-  <param name="use_sim_time" value="true"/>
-
-  <!-- Visualization -->
-  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find amcl3d)/rviz/amcl3d.rviz"/>
+  <arg name="map_name_path"/>
+  <arg name="init_x"/>
+  <arg name="init_y"/>
+  <arg name="init_z"/>
+  <arg name="init_a"/>
+  <arg name="num_particles"/>
+  <arg name="alpha"/>
+  <arg name="take_off_height"/>
 
   <node pkg="amcl3d" type="amcl3d_node" name="amcl3d_node" output="screen">
 
@@ -17,7 +21,7 @@
     <remap from="odometry" to="/vicon_odometry"/>
 
     <!-- To set the topic which has information about the sensor-range sensors -->
-    <remap from="radiorange_sensor" to="/nanotron/range"/>
+    <remap from="radiorange_sensor" to="/nanotron_node/range"/>
 
     <!-- To set the name of the robot TF -->
     <param name="base_frame_id" value="base_link"/>
@@ -29,7 +33,7 @@
     <param name="global_frame_id" value="world"/>
 
     <!-- To set the route to the localization of the environment map -->
-    <param name="map_path" value="$(find amcl3d)/test/map/mapfile_complete.bt"/>
+    <param name="map_path" value="$(arg map_name_path)"/>
 
     <!-- Odometry characterization -->
 
@@ -37,16 +41,16 @@
     <param name="set_initial_pose" value="true"/>
 
     <!-- To set the position in X-axis -->
-    <param name="init_x" value="2.87080164308"/>
+    <param name="init_x" value="$(arg init_x)"/>
 
     <!-- To set the position in Y-axis -->
-    <param name="init_y" value="1.63820032984"/>
+    <param name="init_y" value="$(arg init_y)"/>
 
     <!-- To set the position in Z-axis -->
-    <param name="init_z" value="0.21460881682"/>
+    <param name="init_z" value="$(arg init_z)"/>
 
     <!-- To set the YAW angle -->
-    <param name="init_a" value="0.144"/>
+    <param name="init_a" value="$(arg init_a)"/>
 
     <!-- To set thresholds of X-axis in initial pose -->
     <param name="init_x_dev" value="0.05"/>
@@ -66,13 +70,10 @@
     <param name="publish_point_cloud_rate" value="10"/>
 
     <!-- To set the Z-axis for the grid slice -->
-    <param name="grid_slice" value="-1.0"/>
+    <param name="grid_slice_z" value="-1.0"/>
 
     <!-- To set the rate for publishing the grid slice -->
     <param name="publish_grid_slice_rate" value="10"/>
-
-    <!-- To set the rate for publishing the grid TF -->
-    <param name="publish_grid_tf_rate" value="10"/>
 
     <!-- To set the deviation of 3D laser sensor -->
     <param name="sensor_dev" value="0.05"/>
@@ -86,7 +87,7 @@
     <!-- Filter settings -->
 
     <!-- To set the number of particles in the filter -->
-    <param name="num_particles" value="600"/>
+    <param name="num_particles" value="$(arg num_particles)"/>
 
     <!-- To set the thresholds of X-axis where the filter can predict the particles -->
     <param name="odom_x_mod" value="0.1"/>
@@ -95,7 +96,7 @@
     <param name="odom_y_mod" value="0.1"/>
 
     <!-- To set the thresholds of Z-axis where the filter can predict the particles -->
-    <param name="odom_z_mod" value="0.1"/>
+    <param name="odom_z_mod" value="0.01"/>
 
     <!-- To set the thresholds of YAW angle where the filter can predict the particles -->
     <param name="odom_a_mod" value="0.3"/>
@@ -107,16 +108,16 @@
     <param name="update_rate" value="100"/>
 
     <!-- To set the threshold for the update in the distance -->
-    <param name="d_th" value="0.1"/>
+    <param name="d_th" value="0.05"/>
 
     <!-- To set the threshold for the update in yaw angle -->
-    <param name="a_th" value="0.3"/>
+    <param name="a_th" value="0.03"/>
 
     <!-- To set the threshold for UAV takeoff -->
-    <param name="take_off_height" value="0.5"/>
+    <param name="take_off_height" value="$(arg take_off_height)"/>
 
     <!-- To set the percentage weight of point cloud and range sensor, alpha_*pointcloud + (1-alpha_)*range_sensor -->
-    <param name="alpha" value="1"/>
+    <param name="alpha" value="$(arg alpha)"/>
 
   </node>
 

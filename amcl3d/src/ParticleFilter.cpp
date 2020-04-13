@@ -27,15 +27,15 @@ ParticleFilter::~ParticleFilter()
 {
 }
 
-void ParticleFilter::buildParticlesPoseMsg(const geometry_msgs::Point32& offset, geometry_msgs::PoseArray& msg) const
+void ParticleFilter::buildParticlesPoseMsg(geometry_msgs::PoseArray& msg) const
 {
   msg.poses.resize(p_.size());
 
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
-    msg.poses[i].position.x = static_cast<double>(p_[i].x) + offset.x;
-    msg.poses[i].position.y = static_cast<double>(p_[i].y) + offset.y;
-    msg.poses[i].position.z = static_cast<double>(p_[i].z) + offset.z;
+    msg.poses[i].position.x = static_cast<double>(p_[i].x);
+    msg.poses[i].position.y = static_cast<double>(p_[i].y);
+    msg.poses[i].position.z = static_cast<double>(p_[i].z);
     msg.poses[i].orientation.x = 0.;
     msg.poses[i].orientation.y = 0.;
     msg.poses[i].orientation.z = sin(static_cast<double>(p_[i].a * 0.5f));
@@ -47,10 +47,10 @@ void ParticleFilter::init(const int num_particles, const float x_init, const flo
                           const float a_init, const float x_dev, const float y_dev, const float z_dev,
                           const float a_dev)
 {
-  //! Resize particle set
+  /*  Resize particle set */
   p_.resize(abs(num_particles));
 
-  //! Sample the given pose
+  /*  Sample the given pose */
   const float dev = std::max(std::max(x_dev, y_dev), z_dev);
   const float gauss_const_1 = 1. / (dev * sqrt(2 * M_PI));
   const float gauss_const_2 = 1. / (2 * dev * dev);
@@ -103,7 +103,7 @@ void ParticleFilter::predict(const double odom_x_mod, const double odom_y_mod, c
   const double z_dev = fabs(delta_z * odom_z_mod);
   const double a_dev = fabs(delta_a * odom_a_mod);
 
-  //! Make a prediction for all particles according to the odometry
+  /*  Make a prediction for all particles according to the odometry */
   float sa, ca, rand_x, rand_y;
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
@@ -118,21 +118,22 @@ void ParticleFilter::predict(const double odom_x_mod, const double odom_y_mod, c
   }
 }
 
-void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXYZ>& points,
-                            const std::vector<Range>& range_data, const double alpha, const double sigma)
+void ParticleFilter::update(const Grid3d& grid3d, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+                            const std::vector<Range>& range_data, const double alpha, const double sigma,
+                            const double roll, const double pitch)
 {
-  //! Incorporate measurements
+  /*  Incorporate measurements */
   float wtp = 0, wtr = 0;
 
   clock_t begin_for1 = clock();
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
-    //! Get particle information
+    /*  Get particle information */
     float tx = p_[i].x;
     float ty = p_[i].y;
     float tz = p_[i].z;
 
-    //! Check the particle is into the map
+    /*  Check the particle is into the map */
     if (!grid3d.isIntoMap(tx, ty, tz))
     {
       // std::cout << "Not into map: " << grid3d_.isIntoMap(tx, ty, tz-1.0) << std::endl;
@@ -140,21 +141,21 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
       continue;
     }
 
-    //! Evaluate the weight of the point cloud
-    p_[i].wp = grid3d.computeCloudWeight(points, tx, ty, tz, p_[i].a);
+    /*  Evaluate the weight of the point cloud */
+    p_[i].wp = grid3d.computeCloudWeight(cloud, tx, ty, tz, roll, pitch, p_[i].a);
 
-    //! Evaluate the weight of the range sensors
+    /*  Evaluate the weight of the range sensors */
     p_[i].wr = computeRangeWeight(tx, ty, tz, range_data, sigma);
 
-    //! Increase the summatory of weights
+    /*  Increase the summatory of weights */
     wtp += p_[i].wp;
     wtr += p_[i].wr;
   }
   clock_t end_for1 = clock();
   double elapsed_secs = double(end_for1 - begin_for1) / CLOCKS_PER_SEC;
-  ROS_INFO("Update time 1: [%lf] sec", elapsed_secs);
+  ROS_DEBUG("Update time 1: [%lf] sec", elapsed_secs);
 
-  //! Normalize all weights
+  /*  Normalize all weights */
   float wt = 0;
   for (uint32_t i = 0; i < p_.size(); ++i)
   {
@@ -170,7 +171,7 @@ void ParticleFilter::update(const Grid3d& grid3d, const std::vector<pcl::PointXY
 
     if (!grid3d.isIntoMap(p_[i].x, p_[i].y, p_[i].z))
     {
-      // std::cout << "Not into map: " << grid3d_.isIntoMap(tx, ty, tz-1.0) << std::endl;
+      /* std::cout << "Not into map: " << grid3d_.isIntoMap(tx, ty, tz-1.0) << std::endl; */
       p_[i].w = 0;
     }
     else

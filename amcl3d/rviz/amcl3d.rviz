@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /TF1/Frames1
+        - /PointCloud23
       Splitter Ratio: 0.554795027
     Tree Height: 617
   - Class: rviz/Selection
@@ -58,8 +59,6 @@ Visualization Manager:
         All Enabled: false
         base_link:
           Value: true
-        grid3d:
-          Value: true
         lidar_points:
           Value: true
         odom:
@@ -81,8 +80,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          grid3d:
-            {}
           odom:
             base_link:
               lidar_points:
@@ -118,8 +115,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 5.625
-        Min Value: -0.875
+        Max Value: 6.2249999
+        Min Value: -1.375
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -200,7 +197,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.100000001
       Style: Flat Squares
-      Topic: /amcl3d_node/pointcloud_voxelfiltered
+      Topic: /amcl3d_node/pointcloud_filtered
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -256,7 +253,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 25.9345531
+      Distance: 30.0925713
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -271,10 +268,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.56979632
+      Pitch: 1.04979634
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.88044262
+      Yaw: 2.97544265
     Saved: ~
 Window Geometry:
   Displays:

@@ -29,22 +29,54 @@ catkin_package(
     rosinrange_msg
 )
 
+#######################
+## Configuring GMock ##
+#######################
+
+find_package(GMock)
+
 ###########
 ## Build ##
 ###########
 
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
-file(GLOB_RECURSE UTILS_SRCS "src/*.c*")
-file(GLOB_RECURSE UTILS_HDRS "src/*.h*")
+add_library(${PROJECT_NAME}
+  src/Grid3d.cpp
+  src/Grid3d.h
+  src/ParticleFilter.cpp
+  src/ParticleFilter.h
+  src/PointCloudTools.cpp
+  src/PointCloudTools.h)
+add_dependencies(${PROJECT_NAME}      ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
-add_executable(${PROJECT_NAME}_node         ${UTILS_SRCS} ${UTILS_HDRS})
+add_executable(${PROJECT_NAME}_node
+  src/main.cpp
+  src/Node.cpp
+  src/Node.h
+  src/Parameters.cpp
+  src/Parameters.h)
 add_dependencies(${PROJECT_NAME}_node       ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_node  ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_node  ${catkin_LIBRARIES} ${PROJECT_NAME})
 
-file(GLOB_RECURSE TEST_SRCS "test/*.c*")
-file(GLOB_RECURSE TEST_HDRS "test/*.h*")
+#############
+## Testing ##
+#############
 
-add_executable(${PROJECT_NAME}_testnode         ${TEST_SRCS} ${TEST_HDRS})
-add_dependencies(${PROJECT_NAME}_testnode       ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_testnode  ${catkin_LIBRARIES})
+if(GMOCK_FOUND)
+  include_directories(src)
+  include_directories(SYSTEM ${GMOCK_INCLUDE_DIRS})
+
+  file(GLOB_RECURSE TESTS_SRCS  "tests/*.c*")
+  file(GLOB_RECURSE TESTS_HDRS  "tests/*.h*")
+
+  catkin_add_gtest(${PROJECT_NAME}_tests
+    ${TESTS_SRCS} ${TESTS_HDRS})
+  if(TARGET ${PROJECT_NAME}_tests)
+    target_compile_definitions(${PROJECT_NAME}_tests PRIVATE
+      PROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
+    target_link_libraries(${PROJECT_NAME}_tests
+      ${GMOCK_BOTH_LIBRARIES} ${PROJECT_NAME})
+  endif()
+endif()

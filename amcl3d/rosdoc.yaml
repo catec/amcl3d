@@ -1,0 +1,5 @@
+ - builder: doxygen
+   name: amcl3d
+   output_dir: doc
+   file_patterns: '*.c *.cpp *.h *.hpp'
+   exclude_patterns: '*/rosinrange_msg/* */amcl3d/demo* */amcl3d/tests*'

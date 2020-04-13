@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/fada-catec/amcl3d.svg?branch=master)](https://travis-ci.org/fada-catec/amcl3d)
 [![License](https://img.shields.io/badge/License-Apache%202-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![codecov](https://codecov.io/gh/fada-catec/amcl3d/branch/kinetic-test/graph/badge.svg)](https://codecov.io/gh/fada-catec/amcl3d)
 
 ### Overview
 
@@ -15,14 +16,14 @@ It takes information from an odometry source, point-clouds from an onboard senso
 
 Apache 2.0
 
-**Author: Paloma Carrasco Fernández (pcarrasco@catec.aero),
-          Francisco Cuesta Rodríguez (fcuesta@catec.aero),
+**Author: Paloma Carrasco Fernï¿½ndez (pcarrasco@catec.aero),
+          Francisco Cuesta Rodrï¿½guez (fcuesta@catec.aero),
           Francisco J.Perez-Grau (fjperez@catec.aero)**
 
 **Affiliation: [FADA-CATEC](https://http://www.catec.aero//)**
 
-**Maintainer: Paloma Carrasco Fernández (pcarrasco@catec.aero),
-              Francisco Cuesta Rodríguez (fcuesta@catec.aero)**
+**Maintainer: Paloma Carrasco Fernï¿½ndez (pcarrasco@catec.aero),
+              Francisco Cuesta Rodrï¿½guez (fcuesta@catec.aero)**
 
 The amcl3d package has been tested under [ROS] Kinetic and Ubuntu 16.04.
 
@@ -40,6 +41,7 @@ To know in more detail the behavior of the package:
 
 * **[amcl3d (Wiki-ROS)](http://wiki.ros.org/amcl3d#preview)**
 
+
 ### Installation
 
 #### Building from Source
@@ -53,23 +55,38 @@ To build from source, clone the latest version from this repository into your ca
      cd ../
      catkin build
 
-### Tests
-
-Run the test with
-
-     roslaunch ouster_ros os1.launch os1_hostname:=10.5.5.94 replay:=true
-     roslaunch amcl3d amcl3d_test.launch
-
 ### Launch files
 
 * **amcl3d.launch:** it contains the start of amcl3d node with a standard configuration of parameters.
 
           roslaunch amcl3d amcl3d.launch
 		  
-* **amcl3d_test.launch:**  this roslaunch allows you to start the RViz with the aforementioned configuration, the amcl3d node, the test-amcl3d node, the bag player and creates a transformation to relate the point-cloud frame of test-amcl3d node with the robot frame of amcl3d node.
+* **amcl3d_rosin.launch:**  it contains the initial pose, particle number, 'alpha' parameter, 'take_off_height' parameter and the correctly map to run the algorithm with the correcly data of the rosbag. 
           
-		  roslaunch amcl3d amcl3d_test.launch
+		roslaunch amcl3d amcl3d_rosin.launch
 
+### Gmoke Tests
+
+This branch contains differents tests to evaluate the correct behaviour of the algorithm. To run these tests it is necessary to have the rosbag of the 'Version 1.1.0' release.
+
+     To compile:
+
+          catkin_make tests
+
+     To run:
+
+          rosrun amcl3d amcl3d_tests
+
+
+### Doxygen
+The code has been commentes to offert the posibility to generate a Doxygen documentation. To generate it:
+
+     rosdoc_lite /path/to/workspace/src/amcl3d/amcl3d
+
+To install the rosdoc_lite package:
+
+     apt-get install ros-kinetic-rosdoc_lite
+     
 ### Bugs & Feature Requests
 
 Please report bugs and request features using the [Issue Tracker](https://github.com/fada-catec/amcl3d/issues).

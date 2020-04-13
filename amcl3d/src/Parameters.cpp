@@ -93,19 +93,14 @@ Parameters::Parameters()
     exitWithParameterError("publish_point_cloud_rate");
   }
 
-  if (!ros::param::get("~grid_slice", grid_slice_))
+  if (!ros::param::get("~grid_slice_z", grid_slice_z_))
   {
-    exitWithParameterError("grid_slice");
+    exitWithParameterError("grid_slice_z");
   }
 
   if (!ros::param::get("~publish_grid_slice_rate", publish_grid_slice_rate_))
   {
     exitWithParameterError("publish_grid_slice_rate");
-  }
-
-  if (!ros::param::get("~publish_grid_tf_rate", publish_grid_tf_rate_))
-  {
-    exitWithParameterError("publish_grid_tf_rate");
   }
 
   if (!ros::param::get("~sensor_dev", sensor_dev_))
@@ -194,9 +189,8 @@ Parameters::Parameters()
            "\n      init_z_dev=%lf"
            "\n      init_a_dev=%lf"
            "\n      publish_point_cloud_rate=%lf"
-           "\n      grid_slice=%f"
+           "\n      grid_slice_z=%f"
            "\n      publish_grid_slice_rate=%lf"
-           "\n      publish_grid_tf_rate=%lf"
            "\n      sensor_dev=%lf"
            "\n      sensor_range=%lf"
            "\n      voxel_size=%lf"
@@ -213,9 +207,9 @@ Parameters::Parameters()
            "\n      alpha=%lf",
            ros::this_node::getName().data(), base_frame_id_.c_str(), odom_frame_id_.c_str(), global_frame_id_.c_str(),
            map_path_.c_str(), (int)set_initial_pose_, init_x_, init_y_, init_z_, init_a_, init_x_dev_, init_y_dev_,
-           init_z_dev_, init_a_dev_, publish_point_cloud_rate_, grid_slice_, publish_grid_slice_rate_,
-           publish_grid_tf_rate_, sensor_dev_, sensor_range_, voxel_size_, num_particles_, odom_x_mod_, odom_y_mod_,
-           odom_z_mod_, odom_a_mod_, resample_interval_, update_rate_, d_th_, a_th_, take_off_height_, alpha_);
+           init_z_dev_, init_a_dev_, publish_point_cloud_rate_, grid_slice_z_, publish_grid_slice_rate_, sensor_dev_,
+           sensor_range_, voxel_size_, num_particles_, odom_x_mod_, odom_y_mod_, odom_z_mod_, odom_a_mod_,
+           resample_interval_, update_rate_, d_th_, a_th_, take_off_height_, alpha_);
 }
 
 void Parameters::exitWithParameterError(const char* parameter_str)
