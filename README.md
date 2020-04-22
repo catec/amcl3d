@@ -41,6 +41,9 @@ To know in more detail the behavior of the package:
 
 * **[amcl3d (Wiki-ROS)](http://wiki.ros.org/amcl3d#preview)**
 
+### Demostration Video
+
+[YouTube - Video](https://www.youtube.com/watch?time_continue=6&v=zznQPPagasI&feature=emb_logo)
 
 ### Installation
 
