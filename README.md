@@ -43,7 +43,7 @@ To know in more detail the behavior of the package:
 
 ### Demostration Video
 
-[YouTube - Video](https://www.youtube.com/watch?time_continue=6&v=zznQPPagasI&feature=emb_logo)
+[![](http://img.youtube.com/vi/zznQPPagasI/0.jpg)](http://www.youtube.com/watch?v=zznQPPagasI "")
 
 ### Installation
 
