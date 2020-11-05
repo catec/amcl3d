@@ -59,7 +59,16 @@ bool Grid3d::open(const std::string& map_path, const double sensor_dev)
 
   /* Compute the gridMap using kdtree search over the point-cloud */
   ROS_INFO("[%s] Computing 3D occupancy grid. This will take some time...", ros::this_node::getName().data());
-  grid_info_ = computeGrid(pc_info_, sensor_dev);
+  try
+  {
+    grid_info_ = computeGrid(pc_info_, sensor_dev);
+  }
+  catch(const std::exception& e)
+  {
+    ROS_ERROR("[%s] %s", ros::this_node::getName().data(), e.what());
+    return false;
+  }
+  
   ROS_INFO("[%s] Computing 3D occupancy grid done!", ros::this_node::getName().data());
 
   /* Save grid on file */

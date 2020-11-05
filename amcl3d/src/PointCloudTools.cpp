@@ -100,7 +100,10 @@ Grid3dInfo::Ptr computeGrid(PointCloudInfo::Ptr pc_info, const double sensor_dev
   grid_info->step_y = grid_info->size_x;
   grid_info->step_z = grid_info->size_x * grid_info->size_y;
 
-  const auto grid_size = grid_info->size_x * grid_info->size_y * grid_info->size_z;
+  uint64_t grid_size = static_cast<uint64_t>(grid_info->size_x) * grid_info->size_y * grid_info->size_z;
+  if (grid_size > 250000000) /* 2Gb */    
+    throw std::runtime_error("Octomap size is too big. Grid size over 2Gb.");
+    
   grid_info->grid.resize(grid_size);
 
   /* Setup kdtree */
